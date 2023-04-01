@@ -1,0 +1,24 @@
+{
+  "name": "trading-support-bot",
+  "version": "0.1",
+  "description": "supporting bot for trading",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "standard",
+    "dev": "nodemon --no-warnings --experimental-modules src/index.mjs",
+    "start": "node --no-warnings --experimental-modules src/index.mjs"
+  },
+  "dependencies": {
+    "@koa/cors": "^4.0.0",
+    "dayjs": "^1.11.7",
+    "evernote": "^2.0.5",
+    "koa": "^2.14.1",
+    "koa-bodyparser": "^4.4.0",
+    "koa-logger": "^3.2.1",
+    "koa-router": "^12.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22",
+    "standard": "^17.0.0"
+  }
+}
