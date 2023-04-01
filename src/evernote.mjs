@@ -1,9 +1,13 @@
 import Evernote from 'evernote'
+import * as dotenv from 'dotenv'
+dotenv.config()
 
-const developerToken =
-  'S=s1:U=96eb1:E=18e92d728b0:C=1873b25fcb0:P=1cd:A=en-devtoken:V=2:H=fa3c32c5b179e7cae12e1f5e78e39e4f'
+const token = process.env.EVERNOTE_TOKEN
 
-const client = new Evernote.Client({ token: developerToken, sandbox: true })
+const client = new Evernote.Client({
+  token,
+  sandbox: true,
+})
 
 export const noteStore = client.getNoteStore()
 export const userStore = client.getUserStore()

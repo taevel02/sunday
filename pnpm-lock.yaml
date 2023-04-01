@@ -3,6 +3,7 @@ lockfileVersion: 5.4
 specifiers:
   '@koa/cors': ^4.0.0
   dayjs: ^1.11.7
+  dotenv: ^16.0.3
   evernote: ^2.0.5
   koa: ^2.14.1
   koa-bodyparser: ^4.4.0
@@ -14,6 +15,7 @@ specifiers:
 dependencies:
   '@koa/cors': 4.0.0
   dayjs: 1.11.7
+  dotenv: 16.0.3
   evernote: 2.0.5
   koa: 2.14.1
   koa-bodyparser: 4.4.0
@@ -477,6 +479,11 @@ packages:
     dependencies:
       esutils: 2.0.3
     dev: true
+
+  /dotenv/16.0.3:
+    resolution: {integrity: sha512-7GO6HghkA5fYG9TYnNxi14/7K9f5occMlp3zXAuSxn7CKCxt9xbNWG7yF8hTCSUchlfWSe3uLmlPfigevRItzQ==}
+    engines: {node: '>=12'}
+    dev: false
 
   /ee-first/1.1.1:
     resolution: {integrity: sha1-WQxhFWsK4vTwJVcyoViyZrxWsh0=}
