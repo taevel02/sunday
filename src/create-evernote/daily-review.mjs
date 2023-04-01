@@ -6,16 +6,16 @@ export const dailyReview = async () => {
 
   const filteredUpperLimitData = [
     ...upperLimitData.kospi,
-    ...upperLimitData.kosdaq,
+    ...upperLimitData.kosdaq
   ].filter((item) => item.rateOfChange >= 0)
   const filteredSoaringTradeVolumeData = [
     ...soaringTradeVolumeData.kospi,
-    ...soaringTradeVolumeData.kosdaq,
+    ...soaringTradeVolumeData.kosdaq
   ].filter((item) => item.tradeVolume >= 10000000 && item.rateOfChange >= 0)
 
   const marketData = [
     ...filteredUpperLimitData,
-    ...filteredSoaringTradeVolumeData,
+    ...filteredSoaringTradeVolumeData
   ]
 
   let noteBody = ''

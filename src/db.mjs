@@ -4,7 +4,7 @@ export const upperLimit = async () => {
       'https://invest.zum.com/api/domestic/ranking?category=UPPER_LIMIT',
       {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json;charset=utf-8' },
+        headers: { 'Content-Type': 'application/json;charset=utf-8' }
       }
     ).then((res) => res.json())
 
@@ -20,7 +20,7 @@ export const soaringTradeVolume = async () => {
       'https://invest.zum.com/api/domestic/ranking?category=SOARING_TRADE_VOLUME',
       {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json;charset=utf-8' },
+        headers: { 'Content-Type': 'application/json;charset=utf-8' }
       }
     ).then((res) => res.json())
 

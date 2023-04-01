@@ -6,19 +6,19 @@ const token = process.env.EVERNOTE_TOKEN
 
 const client = new Evernote.Client({
   token,
-  sandbox: true,
+  sandbox: true
 })
 
 export const noteStore = client.getNoteStore()
 export const userStore = client.getUserStore()
 
-export function makeNote(noteStore, noteTitle, noteBody, parentNotebook) {
+export const makeNote = (noteStore, noteTitle, noteBody, parentNotebook) => {
   let nBody = '<?xml version="1.0" encoding="UTF-8"?>'
   nBody += '<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">'
   nBody += `<en-note>${noteBody}</en-note>`
 
   // Create note object
-  let ourNote = new Evernote.Types.Note()
+  const ourNote = new Evernote.Types.Note()
   ourNote.title = noteTitle
   ourNote.content = nBody
 
