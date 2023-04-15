@@ -4,14 +4,18 @@ dotenv.config()
 
 const token = process.env.EVERNOTE_TOKEN
 
-const client = new Evernote.Client({
-  token,
-  sandbox: true
-})
+const client = new Evernote.Client({ token })
 
 export const noteStore = client.getNoteStore()
 export const userStore = client.getUserStore()
 
+/**
+ *
+ * @param {*} noteStore
+ * @param {*} noteTitle
+ * @param {*} noteBody
+ * @param {string} parentNotebook (guid)
+ */
 export const makeNote = (noteStore, noteTitle, noteBody, parentNotebook) => {
   let nBody = '<?xml version="1.0" encoding="UTF-8"?>'
   nBody += '<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">'
@@ -23,8 +27,8 @@ export const makeNote = (noteStore, noteTitle, noteBody, parentNotebook) => {
   ourNote.content = nBody
 
   // parentNotebook is optional; if omitted, default notebook is used
-  if (parentNotebook && parentNotebook.guid) {
-    ourNote.notebookGuid = parentNotebook.guid
+  if (parentNotebook) {
+    ourNote.notebookGuid = parentNotebook
   }
 
   // Attempt to create note in Evernote account (returns a Promise)
@@ -32,6 +36,7 @@ export const makeNote = (noteStore, noteTitle, noteBody, parentNotebook) => {
     .createNote(ourNote)
     .then((note) => {
       // Do something with `note`
+      console.log(`Successfully created, ${note.title}`)
     })
     .catch((error) => {
       // Something was wrong with the note data
