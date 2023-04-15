@@ -14,8 +14,7 @@ export const dailyReview = async () => {
   ].filter((item) => item.tradeVolume >= 10000000 && item.rateOfChange >= 0)
 
   const marketData = [
-    ...filteredUpperLimitData,
-    ...filteredSoaringTradeVolumeData
+    ...new Set([...filteredUpperLimitData, ...filteredSoaringTradeVolumeData])
   ]
 
   let noteBody = ''
@@ -27,11 +26,10 @@ export const dailyReview = async () => {
 
     noteBody += `
       <b>
-        <span style="color: rgb(255, 0, 16);">
+        <span style="--darkmode-color: rgb(255, 146, 153); --lightmode-color: rgb(255, 0, 16);" >
           ●${name} (+${rateOfChange}%)(${tradeVolume}K)
         </span>
       </b>
-      <br />
       <br />
       <br />
     `
