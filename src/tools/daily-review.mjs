@@ -20,7 +20,7 @@ export const dailyReview = async () => {
   let noteBody = ''
 
   for (const index in marketData) {
-    let name = marketData[index].name
+    const name = marketData[index].name
     name.includes('&') && name.replaceAll(/&/g, '&amp;')
 
     const rateOfChange = marketData[index].rateOfChange.toFixed(2)

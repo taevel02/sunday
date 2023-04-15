@@ -19,8 +19,9 @@ export const holidays2023 = [
 ]
 
 const checkHolidays = (date) => {
-  if (holidays2023.inclues(dayjs(new Date(date)).format('YYYY-MM-DD')))
+  if (holidays2023.inclues(dayjs(new Date(date)).format('YYYY-MM-DD'))) {
     return true
+  }
   return false
 }
 
