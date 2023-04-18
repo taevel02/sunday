@@ -4,7 +4,10 @@ dotenv.config()
 
 const token = process.env.EVERNOTE_TOKEN
 
-const client = new Evernote.Client({ token })
+const client = new Evernote.Client({ 
+  token,
+  sandbox: false
+})
 
 export const noteStore = client.getNoteStore()
 export const userStore = client.getUserStore()
