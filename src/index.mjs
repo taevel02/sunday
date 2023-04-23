@@ -21,7 +21,7 @@ scheduleJob(SCHEDULE_RULE, async () => {
   if (!checkHolidays(today)) {
     const title = dayjs(today).format('YYYY년 M월 D일')
     const noteBody = await dailyReview()
-    makeNote(noteStore, title, noteBody, '241a0219-4915-4708-abd4-94109dc4e352')
+    makeNote(noteStore, title, noteBody, '472086db-11f4-7a9f-1a39-334514bd4067')
   } else {
     console.log('Today Korea Stock Market is Closed.')
   }
