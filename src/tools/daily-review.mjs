@@ -21,17 +21,19 @@ export const dailyReview = async () => {
 
   for (const index in marketData) {
     const name = marketData[index].name
-    name.includes('&') && name.replaceAll(/&/g, '&amp')
+    // name.includes('&') && name.replace(/&/g, '&amp')
+    name.replace(/&/g, '&amp')
 
     const rateOfChange = marketData[index].rateOfChange.toFixed(2)
     const tradeVolume = marketData[index].tradeVolume.toString().slice(0, -3)
 
     noteBody += `
       <b>
-        <span style="--darkmode-color: rgb(255, 146, 153); --lightmode-color: rgb(255, 0, 16);" >
+        <span style="color: rgb(255, 0, 16);" >
           ●${name} (+${rateOfChange}%)(${tradeVolume}K)
         </span>
       </b>
+      <br />
       <br />
       <br />
     `
