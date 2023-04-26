@@ -21,8 +21,7 @@ export const dailyReview = async () => {
 
   for (const index in marketData) {
     const name = marketData[index].name
-    // name.includes('&') && name.replace(/&/g, '&amp')
-    name.replace(/&/g, '&amp')
+    name.replaceAll(/&/g, '&amp').replaceAll(/\s/g, '&nbsp')
 
     const rateOfChange = marketData[index].rateOfChange.toFixed(2)
     const tradeVolume = marketData[index].tradeVolume.toString().slice(0, -3)
