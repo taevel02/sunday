@@ -13,9 +13,11 @@ export const dailyReview = async () => {
     ...soaringTradeVolumeData.kosdaq
   ].filter((item) => item.tradeVolume >= 10000000 && item.rateOfChange >= 0)
 
-  const marketData = [
-    ...new Set([...filteredUpperLimitData, ...filteredSoaringTradeVolumeData])
-  ]
+  // remove duplicates
+  const marketData = filteredUpperLimitData.filter(
+    (item) =>
+      !filteredSoaringTradeVolumeData.some((other) => other.id === item.id)
+  )
 
   let noteBody = ''
 
@@ -26,16 +28,7 @@ export const dailyReview = async () => {
     const rateOfChange = marketData[index].rateOfChange.toFixed(2)
     const tradeVolume = marketData[index].tradeVolume.toString().slice(0, -3)
 
-    noteBody += `
-      <b>
-        <span style="color: rgb(255, 0, 16);" >
-          ●${name} (+${rateOfChange}%)(${tradeVolume}K)
-        </span>
-      </b>
-      <br />
-      <br />
-      <br />
-    `
+    noteBody += `<b><span style="color: rgb(255, 0, 16);" >●${name} (+${rateOfChange}%)(${tradeVolume}K)</span></b><br /><br /><br />`
   }
 
   return noteBody
