@@ -11,7 +11,7 @@ const PORT = 8000
 const SCHEDULE_RULE = new RecurrenceRule()
 SCHEDULE_RULE.dayOfWeek = [new Range(1, 5)] // Mon - Fri
 SCHEDULE_RULE.hour = 15
-SCHEDULE_RULE.minute = 31
+SCHEDULE_RULE.minute = 35
 SCHEDULE_RULE.tz = 'Asia/Seoul'
 
 scheduleJob(SCHEDULE_RULE, async () => {
