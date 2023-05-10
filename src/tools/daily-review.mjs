@@ -14,11 +14,14 @@ export const dailyReview = async () => {
   ].filter((item) => item.tradeVolume >= 10000000 && item.rateOfChange >= 0)
 
   // remove duplicates
-  const marketData = [
-    ...new Set([...filteredUpperLimitData, ...filteredSoaringTradeVolumeData])
-  ]
-
-  console.log(marketData)
+  const marketData = filteredUpperLimitData.concat(
+    filteredSoaringTradeVolumeData.filter(
+      (volumeItem) =>
+        !filteredUpperLimitData.some(
+          (upperLimitItem) => upperLimitItem.id === volumeItem.id
+        )
+    )
+  )
 
   let noteBody = ''
 
