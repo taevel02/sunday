@@ -2,8 +2,15 @@ import Koa from 'koa'
 import cors from '@koa/cors'
 import logger from 'koa-logger'
 import parser from 'koa-bodyparser'
-import { Range, RecurrenceRule, scheduleJob } from 'node-schedule'
 import router from './router'
+import { Range, RecurrenceRule, scheduleJob } from 'node-schedule'
+import dayjs from 'dayjs'
+
+import { noteStore } from './api/evernote'
+import makeNote from './api/evernote/make-note'
+
+import checkHolidays from './utils/check-holidays'
+import dailyStudy from './templates/daily-study'
 
 const PORT = 8000
 
