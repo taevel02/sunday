@@ -1,8 +1,11 @@
-import { upperLimit, soaringTradeVolume } from '../db.mjs'
+import soaringTradeVolume from '../api/stock/soaring-trade-volume'
+import upperLimit from '../api/stock/upper-limit'
 
-export const dailyReview = async () => {
+const dailyStudy = async () => {
   const upperLimitData = await upperLimit()
   const soaringTradeVolumeData = await soaringTradeVolume()
+
+  if (!upperLimitData || !soaringTradeVolumeData) return
 
   const filteredUpperLimitData = [
     ...upperLimitData.kospi,
@@ -37,3 +40,5 @@ export const dailyReview = async () => {
 
   return noteBody
 }
+
+export default dailyStudy

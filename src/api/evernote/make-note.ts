@@ -1,31 +1,12 @@
-import Evernote from 'evernote'
-import * as dotenv from 'dotenv'
-dotenv.config()
+import { NoteStoreClient, Types } from 'evernote'
 
-const token = process.env.EVERNOTE_TOKEN
-
-const client = new Evernote.Client({
-  token,
-  sandbox: false
-})
-
-export const noteStore = client.getNoteStore()
-export const userStore = client.getUserStore()
-
-/**
- *
- * @param {*} noteStore
- * @param {*} noteTitle
- * @param {*} noteBody
- * @param {string} parentNotebook (guid)
- */
-export const makeNote = (noteStore, noteTitle, noteBody, parentNotebook) => {
+const makeNote = (noteStore: NoteStoreClient, noteTitle?: string, noteBody?: string, parentNotebook?: string) => {
   let nBody = '<?xml version="1.0" encoding="UTF-8"?>'
   nBody += '<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">'
   nBody += `<en-note>${noteBody}</en-note>`
 
   // Create note object
-  const ourNote = new Evernote.Types.Note()
+  const ourNote = new Types.Note
   ourNote.title = noteTitle
   ourNote.content = nBody
 
@@ -37,14 +18,16 @@ export const makeNote = (noteStore, noteTitle, noteBody, parentNotebook) => {
   // Attempt to create note in Evernote account (returns a Promise)
   noteStore
     .createNote(ourNote)
-    .then((note) => {
+    .then((note: any) => {
       // Do something with `note`
       console.log(`Successfully created, ${note.title}`)
     })
-    .catch((error) => {
+    .catch((error: any) => {
       // Something was wrong with the note data
       // See EDAMErrorCode enumeration for error code explanation
       // http://dev.evernote.com/documentation/reference/Errors.html#Enum_EDAMErrorCode
       console.log(error)
     })
 }
+
+export default makeNote

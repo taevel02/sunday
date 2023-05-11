@@ -3,8 +3,7 @@ import cors from '@koa/cors'
 import logger from 'koa-logger'
 import parser from 'koa-bodyparser'
 import { Range, RecurrenceRule, scheduleJob } from 'node-schedule'
-import router from './router.mjs'
-import { createDailyReview } from './api/services.mjs'
+import router from './router'
 
 const PORT = 8000
 
@@ -15,7 +14,14 @@ SCHEDULE_RULE.minute = 35
 SCHEDULE_RULE.tz = 'Asia/Seoul'
 
 scheduleJob(SCHEDULE_RULE, async () => {
-  await createDailyReview()
+  const today = new Date()
+  if (!checkHolidays(today)) {
+    const title = dayjs(today).format('YYYY년 M월 D일')
+    const content = await dailyStudy()
+    makeNote(noteStore, title, content, '241a0219-4915-4708-abd4-94109dc4e352')
+  } else {
+    console.log('Today Korea Stock Market is Closed.')
+  }
 })
 
 new Koa()
