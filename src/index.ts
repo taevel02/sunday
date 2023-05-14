@@ -1,16 +1,16 @@
+import 'dotenv/config'
+
 import Koa from 'koa'
 import cors from '@koa/cors'
 import logger from 'koa-logger'
 import parser from 'koa-bodyparser'
-import router from './router'
 import { Range, RecurrenceRule, scheduleJob } from 'node-schedule'
 import dayjs from 'dayjs'
 
-import { noteStore } from './api/evernote'
-import makeNote from './api/evernote/make-note'
+import router from './router'
+import { EvernoteManagement, StockManagement } from './api'
 
 import checkHolidays from './utils/check-holidays'
-import dailyStudy from './templates/daily-study'
 
 const PORT = 8000
 
@@ -24,8 +24,13 @@ scheduleJob(SCHEDULE_RULE, async () => {
   const today = new Date()
   if (!checkHolidays(today)) {
     const title = dayjs(today).format('YYYY년 M월 D일')
-    const content = await dailyStudy()
-    makeNote(noteStore, title, content, '241a0219-4915-4708-abd4-94109dc4e352')
+    const content = await StockManagement.createDailyStockReportContent()
+    EvernoteManagement.makeNote(
+      EvernoteManagement.noteStore,
+      title,
+      content,
+      '241a0219-4915-4708-abd4-94109dc4e352'
+    )
   } else {
     console.log('Today Korea Stock Market is Closed.')
   }
