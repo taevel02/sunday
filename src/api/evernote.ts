@@ -1,4 +1,5 @@
 import Evernote, { NoteStoreClient } from 'evernote'
+import { errorMessages, logger } from '../utils/logger'
 
 const evernoteClient = new Evernote.Client({
   token: process.env.EVERNOTE_TOKEN,
@@ -34,13 +35,13 @@ export class EvernoteService {
       .createNote(ourNote)
       .then((note: any) => {
         // Do something with `note`
-        console.log(`Successfully created, ${note.title}`)
+        logger(`Successfully created, ${note.title}`)
       })
       .catch((error: any) => {
         // Something was wrong with the note data
         // See EDAMErrorCode enumeration for error code explanation
         // http://dev.evernote.com/documentation/reference/Errors.html#Enum_EDAMErrorCode
-        console.log(error)
+        errorMessages(error)
       })
   }
 }

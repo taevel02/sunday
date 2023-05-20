@@ -1,4 +1,5 @@
-import { DomesticStock } from '@/interface/stock'
+import { DomesticStock } from '../interface/stock'
+import { errorMessages } from '../utils/logger'
 import { zumInvestApi } from './axios'
 
 export class StockService {
@@ -10,7 +11,7 @@ export class StockService {
 
       return data
     } catch (error) {
-      console.log(error)
+      errorMessages(error)
       return
     }
   }
@@ -23,7 +24,7 @@ export class StockService {
 
       return data
     } catch (error) {
-      console.log(error)
+      errorMessages(error)
       return
     }
   }
