@@ -1,7 +1,7 @@
 {
-  "name": "trading-support-bot",
+  "name": "sunday-ai",
   "version": "0.1",
-  "description": "supporting bot for trading",
+  "description": "My personal AI assistant",
   "main": "src/index.ts",
   "scripts": {
     "dev": "nodemon --watch 'src/**/*' -e ts --exec ts-node -r dotenv/config src/index.ts",
