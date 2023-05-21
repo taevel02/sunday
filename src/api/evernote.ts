@@ -1,5 +1,5 @@
 import Evernote, { NoteStoreClient } from 'evernote'
-import { errorMessages, logger } from '../utils/logger'
+import { logger } from '../utils/logger'
 
 const evernoteClient = new Evernote.Client({
   token: process.env.EVERNOTE_TOKEN,
@@ -41,7 +41,7 @@ export class EvernoteService {
         // Something was wrong with the note data
         // See EDAMErrorCode enumeration for error code explanation
         // http://dev.evernote.com/documentation/reference/Errors.html#Enum_EDAMErrorCode
-        errorMessages(error)
+        console.log(error)
       })
   }
 }
