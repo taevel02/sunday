@@ -1,4 +1,4 @@
-import { DomesticStock } from '../interface/stock'
+import { DomesticStock, StockInfo } from '../interface/stock'
 import { zumInvestApi } from './axios'
 
 export class StockService {
@@ -69,12 +69,17 @@ export class StockService {
         item.rateOfChange <= rateOfChangeRange[1]
     )
 
+    /**
+     *
+     * @todo check exactly upper limit
+     */
     const filteredNewStock = [...newStock.kospi, ...newStock.kosdaq].filter(
       (item) =>
-        tradeVolumeRange[0] <= item.tradeVolume &&
-        item.tradeVolume <= tradeVolumeRange[1] &&
-        rateOfChangeRange[0] <= item.rateOfChange &&
-        item.rateOfChange <= rateOfChangeRange[1]
+        (tradeVolumeRange[0] <= item.tradeVolume &&
+          item.tradeVolume <= tradeVolumeRange[1] &&
+          rateOfChangeRange[0] <= item.rateOfChange &&
+          item.rateOfChange <= rateOfChangeRange[1]) ||
+        item.rateOfChange > 29.5
     )
 
     // deduplication
