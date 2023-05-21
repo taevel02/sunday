@@ -28,6 +28,18 @@ export class StockService {
     }
   }
 
+  private async getNewStock() {
+    try {
+      const { data } = await zumInvestApi.get<DomesticStock>(
+        '/ranking?category=NEW_STOCK'
+      )
+
+      return data
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   /**
    * 국내 금일 시장의 상한가 및 거래량을 기준으로 종목을 정리합니다.
    * @param tradeVolumeRange 거래량 범위 지정 (default: [10000000, 999999999])
@@ -40,8 +52,9 @@ export class StockService {
   ) {
     const upperLimit = await this.getUpperLimit()
     const soaringTradeVolume = await this.getSoaringTradeVolume()
+    const newStock = await this.getNewStock()
 
-    if (!upperLimit || !soaringTradeVolume) return
+    if (!upperLimit || !soaringTradeVolume || !newStock) return
 
     const filteredUpperLimit = [...upperLimit.kospi, ...upperLimit.kosdaq]
 
@@ -56,8 +69,16 @@ export class StockService {
         item.rateOfChange <= rateOfChangeRange[1]
     )
 
+    const filteredNewStock = [...newStock.kospi, ...newStock.kosdaq].filter(
+      (item) =>
+        tradeVolumeRange[0] <= item.tradeVolume &&
+        item.tradeVolume <= tradeVolumeRange[1] &&
+        rateOfChangeRange[0] <= item.rateOfChange &&
+        item.rateOfChange <= rateOfChangeRange[1]
+    )
+
     // deduplication
-    const marketData = filteredUpperLimit.concat(
+    let marketData = filteredUpperLimit.concat(
       filteredSoaringTradeVolume.filter(
         (volumeItem) =>
           !filteredUpperLimit.some(
@@ -65,6 +86,7 @@ export class StockService {
           )
       )
     )
+    marketData = [...marketData, ...filteredNewStock]
 
     let noteBody = ''
     for (const index in marketData) {
