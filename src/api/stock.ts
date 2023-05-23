@@ -1,4 +1,4 @@
-import { DomesticStock, StockInfo } from '../interface/stock'
+import { DomesticStock } from '../interface/stock'
 import { zumInvestApi } from './axios'
 
 export class StockService {
@@ -46,7 +46,7 @@ export class StockService {
    * @param rateOfChangeRange 가격변동폭 지정 (default: [0.0, 30.0])
    * @returns
    */
-  public async createDailyStockReportContent(
+  public async getMarketData(
     tradeVolumeRange: [number, number] = [10000000, 999999999],
     rateOfChangeRange: [number, number] = [0.0, 30.0]
   ) {
@@ -69,6 +69,16 @@ export class StockService {
         item.rateOfChange <= rateOfChangeRange[1]
     )
 
+    // deduplication of filteredUpperLimit and filteredSoaringVolume
+    let marketData = filteredUpperLimit.concat(
+      filteredSoaringTradeVolume.filter(
+        (volumeItem) =>
+          !filteredUpperLimit.some(
+            (upperLimitItem) => upperLimitItem.id === volumeItem.id
+          )
+      )
+    )
+
     /**
      *
      * @todo check exactly upper limit
@@ -82,28 +92,8 @@ export class StockService {
         item.rateOfChange > 29.5
     )
 
-    // deduplication
-    let marketData = filteredUpperLimit.concat(
-      filteredSoaringTradeVolume.filter(
-        (volumeItem) =>
-          !filteredUpperLimit.some(
-            (upperLimitItem) => upperLimitItem.id === volumeItem.id
-          )
-      )
-    )
     marketData = [...marketData, ...filteredNewStock]
 
-    let noteBody = ''
-    for (const index in marketData) {
-      let name = marketData[index].name
-      name = name.replaceAll(/&/g, '&amp;')
-
-      const rateOfChange = marketData[index].rateOfChange.toFixed(2)
-      const tradeVolume = marketData[index].tradeVolume.toString().slice(0, -3)
-
-      noteBody += `<b><span style="color: rgb(255, 0, 16);" >●${name} (+${rateOfChange}%)(${tradeVolume}K)</span></b><br /><br /><br />`
-    }
-
-    return noteBody
+    return marketData
   }
 }
