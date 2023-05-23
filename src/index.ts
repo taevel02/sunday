@@ -9,8 +9,8 @@ import { StockInfo } from './interface/stock'
 import { NoteMetadata } from './interface/evernote'
 import { PersonalNotebook } from './evernote.config'
 
-import StockSymbol from '../templates/stock-symbol'
-import StockReport from '../templates/stock-report'
+import StockSymbol from './templates/stock-symbol'
+import StockReport from './templates/stock-report'
 
 /**
  *
