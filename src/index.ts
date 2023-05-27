@@ -6,11 +6,12 @@ import checkHolidays from './utils/check-holidays'
 import { logger } from './utils/logger'
 
 import { StockInfo } from './interface/stock'
-import { NoteMetadata } from './interface/evernote'
+import { NoteMetadata, guid } from './interface/evernote'
 import { PersonalNotebook } from './evernote.config'
 
 import StockSymbol from './templates/stock-symbol'
 import StockReport from './templates/stock-report'
+import checkStockToExclude from './utils/check-stock-to-exclude'
 
 /**
  *
@@ -39,19 +40,14 @@ const createDailyReviewReport = async (marketData: StockInfo[]) => {
   )
 }
 
-/**
- *
- * @param marketData
- * @todo: 종목 데이터 가져와서 금일 시총은 자동으로 작성될 수 있도록
- */
-const createNewStockReport = async (marketData: StockInfo[]) => {
+const getExistedNotes = async (parantNotebook: guid) => {
   const allNotes: NoteMetadata[] = []
   let _hasNext = true
   let _offset = 0
 
   while (_hasNext) {
     const { notes, hasNext } = await EvernoteManagement.findAllNotesByNotebook(
-      PersonalNotebook['D. 종목 리포트'],
+      parantNotebook,
       _offset
     )
     allNotes.push(...notes)
@@ -59,17 +55,36 @@ const createNewStockReport = async (marketData: StockInfo[]) => {
     _hasNext = hasNext
   }
 
-  const noteTitles = allNotes.map((note) => note.title.split('(')[0])
+  return allNotes
+}
+
+/**
+ *
+ * @param marketData
+ * @todo: 종목 데이터 가져와서 금일 시총은 자동으로 작성될 수 있도록
+ */
+const createNewStockReport = async (marketData: StockInfo[]) => {
+  const stockReports = await getExistedNotes(PersonalNotebook['D. 종목 리포트'])
+  const tempStockReports = await getExistedNotes(
+    PersonalNotebook['E. 종목 리포트 (임시)']
+  )
+
+  const noteTitles = [...tempStockReports, ...stockReports].map(
+    (note) => note.title.split('(')[0]
+  )
   const marketDataTitles = marketData.map((data) => data.name)
 
-  // 이미 리뷰했던 종목은 제외하고, 리뷰할 종목들만 새로 노트 생성
+  // 이미 정리했던/정리하고 있는 종목은 제외하고, 리뷰할 종목들만 새로 노트 생성
   for (const [index, name] of marketDataTitles.entries()) {
     if (!noteTitles.includes(name)) {
-      await EvernoteManagement.makeNote(
-        `${name}(${marketData[index].id})`,
-        StockReport(),
-        PersonalNotebook['E. 종목 리포트 (임시)']
-      )
+      // 기타 제외할 종목도 제외
+      if (checkStockToExclude(name)) continue
+      else
+        await EvernoteManagement.makeNote(
+          `${name}(${marketData[index].id})`,
+          StockReport(),
+          PersonalNotebook['E. 종목 리포트 (임시)']
+        )
     }
   }
 }
