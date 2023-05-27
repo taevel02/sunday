@@ -18,11 +18,7 @@ export const holidays2023 = [
   '2023-12-29'
 ]
 
-const checkHolidays = (date: dayjs.ConfigType): Boolean => {
-  if (holidays2023.includes(dayjs(date).format('YYYY-MM-DD'))) {
-    return true
-  }
-  return false
-}
+const checkHolidays = (date: dayjs.ConfigType): Boolean =>
+  holidays2023.includes(dayjs(date).format('YYYY-MM-DD'))
 
 export default checkHolidays
