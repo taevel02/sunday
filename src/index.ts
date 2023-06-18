@@ -78,13 +78,13 @@ const createNewStockReport = async (marketData: StockInfo[]) => {
   for (const [index, name] of marketDataTitles.entries()) {
     if (!noteTitles.includes(name)) {
       // 기타 제외할 종목도 제외
-      if (checkStockToExclude(name)) continue
-      else
+      if (!checkStockToExclude(name)) {
         await EvernoteManagement.makeNote(
           `${name}(${marketData[index].id})`,
           StockReport(),
           PersonalNotebook['E. 종목 리포트 (임시)']
         )
+      }
     }
   }
 }
@@ -93,7 +93,7 @@ scheduleJob(
   {
     dayOfWeek: [new Range(1, 5)], // Mon - Fri
     hour: 15,
-    minute: 35,
+    minute: 50,
     tz: 'Asia/Seoul'
   },
   async () => {
