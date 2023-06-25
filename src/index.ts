@@ -49,12 +49,12 @@ const main = async () => {
   await TelegramBotManagement.onText(/\/listexcludestock/, async () => {
     const { rows } = await postgres.query('SELECT * FROM excludestock')
 
-    let excludeStock = ''
+    let excludeStockList = ''
     for (const [index, row] of rows.entries())
-      excludeStock += `${index + 1}/ ${row.name}(${row.id})\n`
+      excludeStockList += `${index + 1}/ ${row.name}(${row.id})\n`
 
     await TelegramBotManagement.sendMessage(
-      `제외한 종목은 다음과 같으며, 스팩주와 우선주는 기본으로 제외됩니다.\n\n${excludeStock}`
+      `제외한 종목은 다음과 같으며, 스팩주와 우선주는 기본으로 제외됩니다.\n\n${excludeStockList}`
     )
   })
 
@@ -75,7 +75,7 @@ const main = async () => {
   )
 
   /**
-   * 
+   *
    * only development environment
    */
   if (process.env.NODE_ENV === 'development') {
