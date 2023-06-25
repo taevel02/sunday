@@ -1,15 +1,14 @@
-// 제외할 종목
-export enum excludeStock {
-  '스팩주' = '스팩',
-  '우선주' = '우',
-  '삼성전자' = '삼성전자',
-  'KODEX' = 'KODEX',
-  'TIGER' = 'TIGER',
-  '인버스' = '인버스',
-  '레버리지' = '레버리지'
-}
+import { postgres } from '../db.config'
 
-const checkStockToExclude = (stockName: string): Boolean =>
-  Object.values(excludeStock).some((word) => stockName.includes(word))
+const excludeStock = ['스팩', '우']
+
+const checkStockToExclude = async (stockName: string): Promise<Boolean> => {
+  const { rows } = await postgres.query('SELECT * FROM excludeStock')
+  for (const [, row] of rows.entries()) {
+    excludeStock.push(row.name)
+  }
+
+  return Object.values(excludeStock).some((word) => stockName.includes(word))
+}
 
 export default checkStockToExclude

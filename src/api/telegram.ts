@@ -19,4 +19,11 @@ export class TelegramBotService {
   public async deleteMessage(messageId: number) {
     await telegramBot.deleteMessage(chatId, messageId)
   }
+
+  public async onText(
+    message: RegExp,
+    callback: (msg: TelegramBot.Message, match: RegExpExecArray) => void
+  ) {
+    await telegramBot.onText(message, callback)
+  }
 }

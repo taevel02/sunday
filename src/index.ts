@@ -1,7 +1,13 @@
 import { Range, scheduleJob } from 'node-schedule'
 import dayjs from 'dayjs'
 
-import { EvernoteManagement, StockManagement } from './api'
+import {
+  EvernoteManagement,
+  StockManagement,
+  TelegramBotManagement
+} from './api'
+import { postgres } from './db.config'
+
 import checkHolidays from './utils/check-holidays'
 import { logger } from './utils/logger'
 
@@ -13,6 +19,75 @@ import StockSymbol from './templates/stock-symbol'
 import StockReport from './templates/stock-report'
 import checkStockToExclude from './utils/check-stock-to-exclude'
 
+postgres.connect()
+
+scheduleJob(
+  {
+    dayOfWeek: [new Range(1, 5)], // Mon - Fri
+    hour: 15,
+    minute: 50,
+    tz: 'Asia/Seoul'
+  },
+  async () => {
+    if (!checkHolidays(new Date())) {
+      const marketData = await StockManagement.getMarketData()
+
+      await createDailyReviewReport(marketData)
+      await createNewStockReport(marketData)
+    } else {
+      logger('Today Korea Stock Market is Closed.')
+    }
+  }
+)
+
+const main = async () => {
+  logger('Sunday-AI is running...')
+  process.env.NODE_ENV === 'production' &&
+    (await TelegramBotManagement.sendMessage('Sunday-AI is running...'))
+
+  // control telegram commands
+  await TelegramBotManagement.onText(/\/listexcludestock/, async () => {
+    const { rows } = await postgres.query('SELECT * FROM excludestock')
+
+    let excludeStock = ''
+    for (const [index, row] of rows.entries())
+      excludeStock += `${index + 1}/ ${row.name}(${row.id})\n`
+
+    await TelegramBotManagement.sendMessage(
+      `제외한 종목은 다음과 같으며, 스팩주와 우선주는 기본으로 제외됩니다.\n\n${excludeStock}`
+    )
+  })
+
+  await TelegramBotManagement.onText(
+    /\/addexcludestock (.+)/,
+    async (msg, match) => {
+      /**
+       *
+       * @todo: 종목명만 입력하면 종목코드 정보는 알아서 받아오기 (KIS API)
+       */
+      // await postgres.query(
+      //   `INSERT INTO excludestock VALUES ('', '${match[1]}')`
+      // )
+      // await TelegramBotManagement.sendMessage(
+      //   `${match[1]}을 제외 종목에 추가하였습니다.`
+      // )
+    }
+  )
+
+  /**
+   * 
+   * only development environment
+   */
+  if (process.env.NODE_ENV === 'development') {
+    await TelegramBotManagement.onText(/\/generatestockreport/, async () => {
+      const marketData = await StockManagement.getMarketData()
+      await createDailyReviewReport(marketData)
+      await createNewStockReport(marketData)
+    })
+  }
+}
+main()
+
 /**
  *
  * @param marketData
@@ -20,6 +95,8 @@ import checkStockToExclude from './utils/check-stock-to-exclude'
 const createDailyReviewReport = async (marketData: StockInfo[]) => {
   let content = ''
   for (const index in marketData) {
+    if (await checkStockToExclude(marketData[index].name)) continue
+
     let name = marketData[index].name
     name = name.replaceAll(/&/g, '&amp;')
 
@@ -88,27 +165,3 @@ const createNewStockReport = async (marketData: StockInfo[]) => {
     }
   }
 }
-
-scheduleJob(
-  {
-    dayOfWeek: [new Range(1, 5)], // Mon - Fri
-    hour: 15,
-    minute: 50,
-    tz: 'Asia/Seoul'
-  },
-  async () => {
-    if (!checkHolidays(new Date())) {
-      const marketData = await StockManagement.getMarketData()
-
-      await createDailyReviewReport(marketData)
-      await createNewStockReport(marketData)
-    } else {
-      logger('Today Korea Stock Market is Closed.')
-    }
-  }
-)
-
-const dev = async () => {
-  logger('Sunday-AI is running...')
-}
-dev()
