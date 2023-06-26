@@ -43,7 +43,9 @@ scheduleJob(
 const main = async () => {
   logger('Sunday-AI is running...')
   process.env.NODE_ENV === 'production' &&
-    (await TelegramBotManagement.sendMessage('Sunday-AI is running...'))
+    (await TelegramBotManagement.sendMessage({
+      message: 'Sunday-AI is running...'
+    }))
 
   // control telegram commands
   await TelegramBotManagement.onText(/\/listexcludestock/, async () => {
@@ -53,9 +55,9 @@ const main = async () => {
     for (const [index, row] of rows.entries())
       excludeStockList += `${index + 1}/ ${row.name}(${row.id})\n`
 
-    await TelegramBotManagement.sendMessage(
-      `제외한 종목은 다음과 같으며, 스팩주와 우선주는 기본으로 제외됩니다.\n\n${excludeStockList}`
-    )
+    await TelegramBotManagement.sendMessage({
+      message: `제외한 종목은 다음과 같으며, 스팩주와 우선주는 기본으로 제외됩니다.\n\n${excludeStockList}`
+    })
   })
 
   await TelegramBotManagement.onText(
