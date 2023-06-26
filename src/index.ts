@@ -155,7 +155,7 @@ const createNewStockReport = async (marketData: StockInfo[]) => {
   for (const [index, name] of marketDataTitles.entries()) {
     if (!noteTitles.includes(name)) {
       // 기타 제외할 종목도 제외
-      if (!checkStockToExclude(name)) {
+      if (!await checkStockToExclude(name)) {
         await EvernoteManagement.makeNote(
           `${name}(${marketData[index].id})`,
           StockReport(),
