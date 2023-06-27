@@ -52,9 +52,9 @@ const main = async () => {
    */
   const { rows } = await postgres.query('SELECT * FROM auth')
   if (rows !== null && rows !== undefined) {
-    if (isTokenExpired({ exp: rows?.at(-1)?.expires_in }))
+    if (isTokenExpired({ exp: rows?.at(-1)?.expired_at }))
       await generateAccessToken()
-    else console.log('유효한 토큰이 이미 있습니다')
+    else logger('유효한 토큰이 이미 있습니다')
   } else {
     await generateAccessToken()
   }
@@ -122,7 +122,9 @@ const generateAccessToken = async () => {
      * @todo 인젝션 방지를 위해 쿼리 파라미터화. 두 번째 매개변수로 쿼리 매개변수를 전달하는 것이 좋습니다.
      */
     await postgres.query(
-      `INSERT INTO auth (access_token, expires_in) VALUES ('${result.access_token}', '${result.expires_in}')`
+      `INSERT INTO auth (access_token, expired_at) VALUES ('${
+        result.access_token
+      }', ${Number(Date.now().valueOf() / 1000) + result.expires_in})`
     )
 
     updateHeader('Authorization', `${result.token_type} ${result.access_token}`)

@@ -4,5 +4,3 @@ const isTokenExpired = ({ exp = -1 } = {}) =>
   exp < Date.now().valueOf() / 1000 - 60
 
 export default isTokenExpired
-
-// expires_in: 86400 = 24시간
