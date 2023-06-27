@@ -1,7 +1,7 @@
 import { DomesticStock } from '../interface/stock'
-import { zumInvestApi } from './axios'
+import { zumInvestApi } from '../utils/axios'
 
-export class StockService {
+class StockService {
   private async getUpperLimit() {
     try {
       const { data } = await zumInvestApi.get<DomesticStock>(
@@ -97,3 +97,5 @@ export class StockService {
     return marketData
   }
 }
+
+export default StockService
