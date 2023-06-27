@@ -67,7 +67,7 @@ const main = async () => {
     }))
 
   // # control telegram commands
-  await TelegramBotManagement.onText(/\/listexcludestock/, async () => {
+  TelegramBotManagement.onText(/\/listexcludestock/, async () => {
     const { rows } = await postgres.query('SELECT * FROM excludestock')
 
     let excludeStockList = ''
@@ -79,28 +79,25 @@ const main = async () => {
     })
   })
 
-  await TelegramBotManagement.onText(
-    /\/addexcludestock (.+)/,
-    async (msg, match) => {
-      /**
-       *
-       * @todo: 종목명만 입력하면 종목코드 정보는 알아서 받아오기 (KIS API)
-       */
-      // await postgres.query(
-      //   `INSERT INTO excludestock VALUES ('', '${match[1]}')`
-      // )
-      // await TelegramBotManagement.sendMessage(
-      //   `${match[1]}을 제외 종목에 추가하였습니다.`
-      // )
-    }
-  )
+  TelegramBotManagement.onText(/\/addexcludestock (.+)/, async (msg, match) => {
+    /**
+     *
+     * @todo: 종목명만 입력하면 종목코드 정보는 알아서 받아오기 (KIS API)
+     */
+    // await postgres.query(
+    //   `INSERT INTO excludestock VALUES ('', '${match[1]}')`
+    // )
+    // await TelegramBotManagement.sendMessage(
+    //   `${match[1]}을 제외 종목에 추가하였습니다.`
+    // )
+  })
 
   /**
    *
    * only development environment
    */
   if (process.env.NODE_ENV === 'development') {
-    await TelegramBotManagement.onText(/\/generatestockreport/, async () => {
+    TelegramBotManagement.onText(/\/generatestockreport/, async () => {
       const marketData = await StockManagement.getMarketData()
       await createDailyReviewReport(marketData)
       await createNewStockReport(marketData)

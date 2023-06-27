@@ -26,10 +26,10 @@ export class TelegramBotService {
     await telegramBot.deleteMessage(chatId, messageId)
   }
 
-  public async onText(
+  public onText(
     message: RegExp,
     callback: (msg: TelegramBot.Message, match: RegExpExecArray) => void
   ) {
-    await telegramBot.onText(message, callback)
+    telegramBot.onText(message, callback)
   }
 }
