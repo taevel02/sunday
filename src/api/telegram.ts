@@ -5,10 +5,16 @@ const chatId = process.env.TELEGRAM_CHAT_ID
 const telegramBot = new TelegramBot(token, { polling: true })
 
 export class TelegramBotService {
-  public async sendMessage(message: string) {
+  public async sendMessage({
+    message,
+    type = 'info'
+  }: {
+    message: string
+    type?: 'info' | 'error'
+  }) {
     const { message_id, text } = await telegramBot.sendMessage(
       chatId,
-      `🐣 ${message}`,
+      type === 'info' ? `🐣 ${message}` : `[Error] ${message}`,
       {
         disable_web_page_preview: true
       }
@@ -20,10 +26,10 @@ export class TelegramBotService {
     await telegramBot.deleteMessage(chatId, messageId)
   }
 
-  public async onText(
+  public onText(
     message: RegExp,
     callback: (msg: TelegramBot.Message, match: RegExpExecArray) => void
   ) {
-    await telegramBot.onText(message, callback)
+    telegramBot.onText(message, callback)
   }
 }
