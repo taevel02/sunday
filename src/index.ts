@@ -121,10 +121,10 @@ const main = async () => {
     const 상승봉 = await DomesticStockManagement.get1000억봉()
 
     // 데일리 상천주 정리
-    // await createDailyReviewReport(상천주)
+    await createDailyReviewReport(상천주)
 
     // 정리 안되어 있는 종목들 신규 생성
-    // await createNewStockReport(상천주)
+    await createNewStockReport(상천주)
 
     // 차트상 관심주 정리 (1000억 봉)
     await createDailyChartStudy(상승봉)
