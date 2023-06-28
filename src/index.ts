@@ -3,24 +3,24 @@ import dayjs from 'dayjs'
 
 import {
   AuthManagement,
+  DomesticStockManagement,
   EvernoteManagement,
-  StockManagement,
   TelegramBotManagement
 } from './api'
+
 import { postgres } from './db.config'
-
-import checkHolidays from './utils/check-holidays'
-import { logger } from './utils/logger'
-
-import { StockInfo } from './interface/stock'
-import { NoteMetadata, guid } from './interface/evernote'
 import { PersonalNotebook } from './evernote.config'
+
+import { NoteMetadata, guid } from './interface/evernote'
+import { StockInfo } from './interface/domestic'
 
 import StockSymbol from './templates/stock-symbol'
 import StockReport from './templates/stock-report'
+
 import checkStockToExclude from './utils/check-stock-to-exclude'
 import { updateHeader } from './utils/axios'
 import isTokenExpired from './utils/is-token-expired'
+import { logger } from './utils/logger'
 
 postgres.connect()
 
@@ -32,13 +32,24 @@ scheduleJob(
     tz: 'Asia/Seoul'
   },
   async () => {
-    if (!checkHolidays(new Date())) {
-      const marketData = await StockManagement.getMarketData()
+    const { result } = await DomesticStockManagement.checkHoliday({
+      BASS_DT: dayjs(new Date()).format('YYYYMMDD'),
+      CTX_AREA_FK: '',
+      CTX_AREA_NK: ''
+    })
 
+    if (result.output[0].bzdy_yn === 'Y') {
+      const marketData = await DomesticStockManagement.get상천주()
+
+      // 데일리 상천주 정리
       await createDailyReviewReport(marketData)
+
+      // 정리 안되어 있는 종목들 신규 생성
       await createNewStockReport(marketData)
+
+      // @todo: 차트상 관심주 자동 생성
     } else {
-      logger('Today Korea Stock Market is Closed.')
+      logger('금일 국내 증시는 휴장입니다.')
     }
   }
 )
@@ -54,7 +65,13 @@ const main = async () => {
   if (rows !== null && rows !== undefined) {
     if (isTokenExpired({ exp: rows?.at(-1)?.expired_at }))
       await generateAccessToken()
-    else logger('유효한 토큰이 이미 있습니다')
+    else {
+      logger('유효한 토큰이 이미 있습니다')
+
+      updateHeader('Authorization', `Bearer ${rows?.at(-1).access_token}`)
+      updateHeader('appkey', process.env.KIS_KEY)
+      updateHeader('appsecret', process.env.KIS_SECRET)
+    }
   } else {
     await generateAccessToken()
   }
@@ -75,7 +92,7 @@ const main = async () => {
       excludeStockList += `${index + 1}/ ${row.name}(${row.id})\n`
 
     await TelegramBotManagement.sendMessage({
-      message: `제외한 종목은 다음과 같으며, 스팩주와 우선주는 기본으로 제외됩니다.\n\n${excludeStockList}`
+      message: `정리에서 제외한 개별종목은 다음과 같습니다.\n\n${excludeStockList}`
     })
   })
 
@@ -98,7 +115,7 @@ const main = async () => {
    */
   if (process.env.NODE_ENV === 'development') {
     TelegramBotManagement.onText(/\/generatestockreport/, async () => {
-      const marketData = await StockManagement.getMarketData()
+      const marketData = await DomesticStockManagement.get상천주()
       await createDailyReviewReport(marketData)
       await createNewStockReport(marketData)
     })
@@ -134,10 +151,6 @@ const generateAccessToken = async () => {
   }
 }
 
-/**
- *
- * @param marketData
- */
 const createDailyReviewReport = async (marketData: StockInfo[]) => {
   let content = ''
   for (const index in marketData) {
@@ -146,8 +159,10 @@ const createDailyReviewReport = async (marketData: StockInfo[]) => {
     let name = marketData[index].name
     name = name.replaceAll(/&/g, '&amp;')
 
-    const rateOfChange = marketData[index].rateOfChange.toFixed(2)
-    const tradeVolume = marketData[index].tradeVolume.toString().slice(0, -3)
+    const rateOfChange = parseFloat(marketData[index].chgrate).toFixed(2)
+    const tradeVolume = parseInt(marketData[index].acml_vol)
+      .toString()
+      .slice(0, -3)
 
     content += `${StockSymbol(
       name,
@@ -181,11 +196,6 @@ const getExistedNotes = async (parantNotebook: guid) => {
   return allNotes
 }
 
-/**
- *
- * @param marketData
- * @todo: 종목 데이터 가져와서 금일 시총은 자동으로 작성될 수 있도록
- */
 const createNewStockReport = async (marketData: StockInfo[]) => {
   const stockReports = await getExistedNotes(PersonalNotebook['D. 종목 리포트'])
   const tempStockReports = await getExistedNotes(
@@ -203,8 +213,8 @@ const createNewStockReport = async (marketData: StockInfo[]) => {
       // 기타 제외할 종목도 제외
       if (!(await checkStockToExclude(name))) {
         await EvernoteManagement.makeNote(
-          `${name}(${marketData[index].id})`,
-          StockReport(),
+          `${name}(${marketData[index].code})`,
+          StockReport(parseInt(marketData[index].stotprice)),
           PersonalNotebook['E. 종목 리포트 (임시)']
         )
       }

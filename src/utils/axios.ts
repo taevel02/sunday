@@ -4,13 +4,6 @@ import axiosRetry from 'axios-retry'
 import { logger } from './logger'
 import { TelegramBotManagement } from '../api'
 
-export const zumInvestApi = axios.create({
-  baseURL: 'https://invest.zum.com/api/domestic',
-  headers: {
-    'Content-Type': 'application/json; charset=UTF-8'
-  }
-})
-
 const instance = axios.create({
   baseURL: 'https://openapi.koreainvestment.com:9443'
 })
