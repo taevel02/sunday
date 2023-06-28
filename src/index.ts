@@ -39,15 +39,22 @@ scheduleJob(
     })
 
     if (result.output[0].bzdy_yn === 'Y') {
-      const marketData = await DomesticStockManagement.get상천주()
+      const 상천주 = await DomesticStockManagement.get상천주()
+      const 상승봉 = await DomesticStockManagement.get1000억봉()
 
       // 데일리 상천주 정리
-      await createDailyReviewReport(marketData)
+      await createDailyReviewReport(상천주)
 
       // 정리 안되어 있는 종목들 신규 생성
-      await createNewStockReport(marketData)
+      await createNewStockReport(상천주)
 
-      // @todo: 차트상 관심주 자동 생성
+      // 차트상 관심주 정리 (1000억 봉)
+      await createDailyChartStudy(상승봉)
+
+      // TelegramBotManagement.sendMessage({
+      //   message:
+      //     '금일 국내 증시의 상천주와 1000억봉이 출현한 종목 정리 노트를 생성했습니다.'
+      // })
     } else {
       logger('금일 국내 증시는 휴장입니다.')
     }
@@ -109,17 +116,19 @@ const main = async () => {
     // )
   })
 
-  /**
-   *
-   * only development environment
-   */
-  if (process.env.NODE_ENV === 'development') {
-    TelegramBotManagement.onText(/\/generatestockreport/, async () => {
-      const marketData = await DomesticStockManagement.get상천주()
-      await createDailyReviewReport(marketData)
-      await createNewStockReport(marketData)
-    })
-  }
+  TelegramBotManagement.onText(/\/generatestockreport/, async () => {
+    const 상천주 = await DomesticStockManagement.get상천주()
+    const 상승봉 = await DomesticStockManagement.get1000억봉()
+
+    // 데일리 상천주 정리
+    // await createDailyReviewReport(상천주)
+
+    // 정리 안되어 있는 종목들 신규 생성
+    // await createNewStockReport(상천주)
+
+    // 차트상 관심주 정리 (1000억 봉)
+    await createDailyChartStudy(상승봉)
+  })
 }
 main()
 
@@ -156,8 +165,7 @@ const createDailyReviewReport = async (marketData: StockInfo[]) => {
   for (const index in marketData) {
     if (await checkStockToExclude(marketData[index].name)) continue
 
-    let name = marketData[index].name
-    name = name.replaceAll(/&/g, '&amp;')
+    const name = marketData[index].name.replaceAll(/&/g, '&amp;')
 
     const rateOfChange = parseFloat(marketData[index].chgrate).toFixed(2)
     const tradeVolume = parseInt(marketData[index].acml_vol)
@@ -220,4 +228,20 @@ const createNewStockReport = async (marketData: StockInfo[]) => {
       }
     }
   }
+}
+
+const createDailyChartStudy = async (marketData: StockInfo[]) => {
+  let content = `<b>[상승봉] 1000억 봉</b><br /><br />-(0일차) `
+  for (const index in marketData) {
+    if (await checkStockToExclude(marketData[index].name)) continue
+
+    const name = marketData[index].name.replaceAll(/&/g, '&amp;')
+    content += `${name} `
+  }
+
+  await EvernoteManagement.makeNote(
+    dayjs(new Date(Date.now() + 3600 * 1000 * 24)).format('YYYY년 M월 D일'),
+    content,
+    PersonalNotebook['C. 차트상 관심주']
+  )
 }

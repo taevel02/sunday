@@ -6,6 +6,7 @@ import {
   HolidayResponse,
   PSearchResultRequest,
   PSearchResultResponse,
+  StockInfo,
   TR_ID
 } from '../interface/domestic'
 import { api } from '../utils/axios'
@@ -81,7 +82,11 @@ export class DomesticStockService {
     }
   }
 
-  public async get상천주() {
+  /**
+   *
+   * @todo ETF, ETN 제외
+   */
+  public async get상천주(): Promise<StockInfo[]> {
     const _거래량1000만 = (
       await this.pSearchResult({
         user_id: 'taevel02',
@@ -104,5 +109,16 @@ export class DomesticStockService {
     )
 
     return filteredMarketData
+  }
+
+  public async get1000억봉(): Promise<StockInfo[]> {
+    const _1000억봉 = (
+      await this.pSearchResult({
+        user_id: 'taevel02',
+        seq: 0
+      })
+    ).result
+
+    return _1000억봉.output2
   }
 }
