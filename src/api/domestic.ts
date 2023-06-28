@@ -100,8 +100,7 @@ export class DomesticStockService {
       })
     ).result
 
-    // deduplication
-    const filteredMarketData = _상한가.output2.concat(
+    const filteredMarketData = _상한가.output2?.concat(
       _거래량1000만.output2.filter(
         (vol) =>
           !_상한가.output2.some((upperLimit) => upperLimit.code === vol.code)

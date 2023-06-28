@@ -213,7 +213,9 @@ const createNewStockReport = async (marketData: StockInfo[]) => {
   const noteTitles = [...tempStockReports, ...stockReports].map(
     (note) => note.title.split('(')[0]
   )
-  const marketDataTitles = marketData.map((data) => data.name)
+  const marketDataTitles = marketData?.map((data) => data.name)
+
+  if (marketDataTitles === undefined || marketDataTitles.length === 0) return
 
   // 이미 정리했던/정리하고 있는 종목은 제외하고, 리뷰할 종목들만 새로 노트 생성
   for (const [index, name] of marketDataTitles.entries()) {
