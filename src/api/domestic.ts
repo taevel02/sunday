@@ -6,6 +6,8 @@ import {
   HolidayResponse,
   PSearchResultRequest,
   PSearchResultResponse,
+  SearchStockInfoRequest,
+  SearchStockInfoResponse,
   StockInfo,
   TR_ID
 } from '../interface/domestic'
@@ -22,8 +24,7 @@ export class DomesticStockService {
           {
             params: request,
             headers: {
-              tr_id: TR_ID.국내휴장일조회,
-              custtype: CUSTOMER_TYPE.개인
+              tr_id: TR_ID.국내휴장일조회
             }
           }
         )
@@ -57,8 +58,7 @@ export class DomesticStockService {
           {
             params: request,
             headers: {
-              tr_id: TR_ID.종목조건검색조회,
-              custtype: CUSTOMER_TYPE.개인
+              tr_id: TR_ID.종목조건검색조회
             }
           }
         )
@@ -73,6 +73,35 @@ export class DomesticStockService {
       return {
         code: ServerResponseCode.OK,
         result: pSearchResults
+      }
+    } catch (err) {
+      const error = err as AxiosError
+      return {
+        code: error.response?.status ?? -1
+      }
+    }
+  }
+
+  public async searchStockInfo(
+    request: SearchStockInfoRequest
+  ): Promise<ServerResponse<SearchStockInfoResponse>> {
+    try {
+      const searchStockInfoResults = (
+        await api.get<SearchStockInfoResponse>(
+          '/uapi/domestic-stock/v1/quotations/search-info',
+          { params: request, headers: { tr_id: TR_ID.상품기본조회 } }
+        )
+      ).data
+
+      if (searchStockInfoResults === undefined) {
+        return {
+          code: ServerResponseCode.NOT_FOUND
+        }
+      }
+
+      return {
+        code: ServerResponseCode.OK,
+        result: searchStockInfoResults
       }
     } catch (err) {
       const error = err as AxiosError

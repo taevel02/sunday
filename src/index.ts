@@ -12,7 +12,7 @@ import { postgres } from './db.config'
 import { PersonalNotebook } from './evernote.config'
 
 import { NoteMetadata, guid } from './interface/evernote'
-import { StockInfo } from './interface/domestic'
+import { CUSTOMER_TYPE, StockInfo } from './interface/domestic'
 
 import StockSymbol from './templates/stock-symbol'
 import StockReport from './templates/stock-report'
@@ -78,6 +78,7 @@ const main = async () => {
       updateHeader('Authorization', `Bearer ${rows?.at(-1).access_token}`)
       updateHeader('appkey', process.env.KIS_KEY)
       updateHeader('appsecret', process.env.KIS_SECRET)
+      updateHeader('custtype', CUSTOMER_TYPE.개인)
     }
   } else {
     await generateAccessToken()
@@ -98,23 +99,52 @@ const main = async () => {
     for (const [index, row] of rows.entries())
       excludeStockList += `${index + 1}/ ${row.name}(${row.id})\n`
 
+    if (excludeStockList === '')
+      await TelegramBotManagement.sendMessage({
+        message: '정리에서 제외한 개별종목이 없습니다.'
+      })
+    else
+      await TelegramBotManagement.sendMessage({
+        message: `정리에서 제외한 개별종목은 다음과 같습니다.\n\n${excludeStockList}`
+      })
+  })
+
+  TelegramBotManagement.onText(/\/addexcludestock (.+)/, async (_, match) => {
+    const stockInfo = (
+      await DomesticStockManagement.searchStockInfo({
+        PDNO: match[1],
+        PRDT_TYPE_CD: 300
+      })
+    ).result.output
+
+    await postgres.query(
+      `INSERT INTO excludestock VALUES ('${stockInfo.shtn_pdno}', '${stockInfo.prdt_abrv_name}')`
+    )
+
     await TelegramBotManagement.sendMessage({
-      message: `정리에서 제외한 개별종목은 다음과 같습니다.\n\n${excludeStockList}`
+      message: `앞으로 ${stockInfo.prdt_abrv_name}(${stockInfo.shtn_pdno}) 종목을 정리하지 않습니다.`
     })
   })
 
-  TelegramBotManagement.onText(/\/addexcludestock (.+)/, async (msg, match) => {
-    /**
-     *
-     * @todo: 종목명만 입력하면 종목코드 정보는 알아서 받아오기 (KIS API)
-     */
-    // await postgres.query(
-    //   `INSERT INTO excludestock VALUES ('', '${match[1]}')`
-    // )
-    // await TelegramBotManagement.sendMessage(
-    //   `${match[1]}을 제외 종목에 추가하였습니다.`
-    // )
-  })
+  TelegramBotManagement.onText(
+    /\/deleteexcludestock (.+)/,
+    async (_, match) => {
+      const stockInfo = (
+        await DomesticStockManagement.searchStockInfo({
+          PDNO: match[1],
+          PRDT_TYPE_CD: 300
+        })
+      ).result.output
+
+      await postgres.query(
+        `DELETE FROM excludestock WHERE id = '${stockInfo.shtn_pdno}'`
+      )
+
+      await TelegramBotManagement.sendMessage({
+        message: `${stockInfo.prdt_abrv_name}(${stockInfo.shtn_pdno}) 종목을 정리에서 제외하지 않습니다.`
+      })
+    }
+  )
 
   TelegramBotManagement.onText(/\/generatestockreport/, async () => {
     const 상천주 = await DomesticStockManagement.get상천주()
@@ -153,10 +183,12 @@ const generateAccessToken = async () => {
     updateHeader('Authorization', `${result.token_type} ${result.access_token}`)
     updateHeader('appkey', process.env.KIS_KEY)
     updateHeader('appsecret', process.env.KIS_SECRET)
+    updateHeader('custtype', CUSTOMER_TYPE.개인)
   } else {
     updateHeader('Authorization')
     updateHeader('appkey')
     updateHeader('appsecret')
+    updateHeader('custtype', CUSTOMER_TYPE.개인)
   }
 }
 

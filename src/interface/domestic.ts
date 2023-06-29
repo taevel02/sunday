@@ -12,7 +12,8 @@ export type PRDT_TYPE_CD = 300 | 301 | 302 | 512 | 515 | 501 | 507 | 551
 
 export enum TR_ID {
   '국내휴장일조회' = 'CTCA0903R',
-  '종목조건검색조회' = 'HHKST03900400'
+  '종목조건검색조회' = 'HHKST03900400',
+  '상품기본조회' = 'CTPF1604R'
 }
 
 export enum CUSTOMER_TYPE {
@@ -58,4 +59,16 @@ export interface PSearchResultRequest {
 
 export interface PSearchResultResponse extends BaseResponse {
   output2: StockInfo[]
+}
+
+export interface SearchStockInfoRequest {
+  PDNO: string
+  PRDT_TYPE_CD: PRDT_TYPE_CD
+}
+
+export interface SearchStockInfoResponse extends BaseResponse {
+  output: {
+    shtn_pdno: string // 상품번호
+    prdt_abrv_name: string // 상품명
+  }
 }
