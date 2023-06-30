@@ -24,6 +24,30 @@ import { logger } from './utils/logger'
 
 postgres.connect()
 
+/**
+ *
+ * 1. check for a valid token
+ * 2. if the token is invalid, generate a new access token
+ * 3. and then update the headers.
+ */
+const checkValidToken = async () => {
+  const { rows } = await postgres.query('SELECT * FROM auth')
+  if (rows !== null && rows !== undefined) {
+    if (isTokenExpired({ exp: rows?.at(-1)?.expired_at }))
+      await generateAccessToken()
+    else {
+      logger('유효한 토큰이 이미 있습니다')
+
+      updateHeader('Authorization', `Bearer ${rows?.at(-1).access_token}`)
+      updateHeader('appkey', process.env.KIS_KEY)
+      updateHeader('appsecret', process.env.KIS_SECRET)
+      updateHeader('custtype', CUSTOMER_TYPE.개인)
+    }
+  } else {
+    await generateAccessToken()
+  }
+}
+
 scheduleJob(
   {
     dayOfWeek: [new Range(1, 5)], // Mon - Fri
@@ -32,6 +56,8 @@ scheduleJob(
     tz: 'Asia/Seoul'
   },
   async () => {
+    await checkValidToken()
+
     const { result } = await DomesticStockManagement.checkHoliday({
       BASS_DT: dayjs(new Date()).format('YYYYMMDD'),
       CTX_AREA_FK: '',
@@ -62,27 +88,7 @@ scheduleJob(
 )
 
 const main = async () => {
-  /**
-   *
-   * 1. check for a valid token
-   * 2. if the token is invalid, generate a new access token
-   * 3. and then update the headers.
-   */
-  const { rows } = await postgres.query('SELECT * FROM auth')
-  if (rows !== null && rows !== undefined) {
-    if (isTokenExpired({ exp: rows?.at(-1)?.expired_at }))
-      await generateAccessToken()
-    else {
-      logger('유효한 토큰이 이미 있습니다')
-
-      updateHeader('Authorization', `Bearer ${rows?.at(-1).access_token}`)
-      updateHeader('appkey', process.env.KIS_KEY)
-      updateHeader('appsecret', process.env.KIS_SECRET)
-      updateHeader('custtype', CUSTOMER_TYPE.개인)
-    }
-  } else {
-    await generateAccessToken()
-  }
+  await checkValidToken()
 
   // # Sunday-AI is running...
   logger('Sunday-AI is running...')
