@@ -111,10 +111,6 @@ export class DomesticStockService {
     }
   }
 
-  /**
-   *
-   * @todo ETF, ETN 제외
-   */
   public async get상천주(): Promise<StockInfo[]> {
     const _거래량1000만 = (
       await this.pSearchResult({
@@ -129,7 +125,12 @@ export class DomesticStockService {
       })
     ).result
 
-    const filteredMarketData = _상한가.output2?.concat(
+    if (_상한가.output2 === undefined) {
+      if (_거래량1000만.output2 === undefined) return []
+      else return _거래량1000만.output2
+    }
+
+    const filteredMarketData = _상한가.output2.concat(
       _거래량1000만.output2.filter(
         (vol) =>
           !_상한가.output2.some((upperLimit) => upperLimit.code === vol.code)
