@@ -52,12 +52,22 @@ scheduleJob(
   {
     dayOfWeek: [new Range(1, 5)], // Mon - Fri
     hour: 15,
-    minute: 50,
+    minute: 40,
     tz: 'Asia/Seoul'
   },
   async () => {
     await checkValidToken()
+  }
+)
 
+scheduleJob(
+  {
+    dayOfWeek: [new Range(1, 5)], // Mon - Fri
+    hour: 15,
+    minute: 50,
+    tz: 'Asia/Seoul'
+  },
+  async () => {
     const { result } = await DomesticStockManagement.checkHoliday({
       BASS_DT: dayjs(new Date()).format('YYYYMMDD'),
       CTX_AREA_FK: '',

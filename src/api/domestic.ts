@@ -117,23 +117,22 @@ export class DomesticStockService {
         user_id: 'taevel02',
         seq: 1
       })
-    ).result
+    )?.result?.output2
     const _상한가 = (
       await this.pSearchResult({
         user_id: 'taevel02',
         seq: 2
       })
-    ).result
+    )?.result?.output2
 
-    if (_상한가.output2 === undefined) {
-      if (_거래량1000만.output2 === undefined) return []
-      else return _거래량1000만.output2
+    if (_상한가 === undefined) {
+      if (_거래량1000만 === undefined) return []
+      else return _거래량1000만
     }
 
-    const filteredMarketData = _상한가.output2.concat(
-      _거래량1000만.output2.filter(
-        (vol) =>
-          !_상한가.output2.some((upperLimit) => upperLimit.code === vol.code)
+    const filteredMarketData = _상한가.concat(
+      _거래량1000만.filter(
+        (vol) => !_상한가.some((upperLimit) => upperLimit.code === vol.code)
       )
     )
 
@@ -146,8 +145,10 @@ export class DomesticStockService {
         user_id: 'taevel02',
         seq: 0
       })
-    ).result
+    )?.result?.output2
 
-    return _1000억봉.output2
+    if (_1000억봉 === undefined) return []
+
+    return _1000억봉
   }
 }
