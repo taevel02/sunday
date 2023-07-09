@@ -9,7 +9,7 @@
     "lint:fix": "prettier --write . && eslint --fix",
     "lint": "prettier --check . && eslint"
   },
-  "packageManager": "pnpm@8.6.5",
+  "packageManager": "pnpm@8.6.6",
   "dependencies": {
     "axios": "^1.4.0",
     "axios-retry": "^3.5.0",
