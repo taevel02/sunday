@@ -28,7 +28,7 @@
     "@types/pg": "^8.10.2",
     "chalk": "^4.1.2",
     "dotenv": "^16.0.3",
-    "nodemon": "^2.0.22",
+    "nodemon": "^3.0.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.4"
   }
