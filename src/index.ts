@@ -174,6 +174,10 @@ const main = async () => {
 
     // 차트상 관심주 정리 (1000억 봉)
     await createDailyChartStudy(상승봉)
+
+    TelegramBotManagement.sendMessage({
+      message: '임의로 데일리 리포트를 생성했습니다.'
+    })
   })
 }
 main()
@@ -289,8 +293,25 @@ const createDailyChartStudy = async (marketData: StockInfo[]) => {
     content += `${name} `
   }
 
+  const { result } = await DomesticStockManagement.checkHoliday({
+    BASS_DT: dayjs(new Date(Date.now() + 86400000)).format('YYYYMMDD'),
+    CTX_AREA_FK: '',
+    CTX_AREA_NK: ''
+  })
+
+  let caculatedDate
+  for (const index in result.output) {
+    if (result.output[index].bzdy_yn !== 'Y') continue
+    else {
+      caculatedDate = dayjs(result.output[index].bass_dt).format(
+        'YYYY년 M월 D일'
+      )
+      break
+    }
+  }
+
   await EvernoteManagement.makeNote(
-    dayjs(new Date(Date.now() + 3600 * 1000 * 24)).format('YYYY년 M월 D일'),
+    caculatedDate,
     content,
     PersonalNotebook['C. 차트상 관심주']
   )
