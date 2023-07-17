@@ -76,7 +76,7 @@ scheduleJob(
 
     if (result.output[0].bzdy_yn === 'Y') {
       const 상천주 = await DomesticStockManagement.get상천주()
-      const 상승봉 = await DomesticStockManagement.get1000억봉()
+      // const 상승봉 = await DomesticStockManagement.get1000억봉()
 
       // 데일리 상천주 정리
       await createDailyReviewReport(상천주)
@@ -85,12 +85,12 @@ scheduleJob(
       await createNewStockReport(상천주)
 
       // 차트상 관심주 정리 (1000억 봉)
-      await createDailyChartStudy(상승봉)
+      // await createDailyChartStudy(상승봉)
 
-      // TelegramBotManagement.sendMessage({
-      //   message:
-      //     '금일 국내 증시의 상천주와 1000억봉이 출현한 종목 정리 노트를 생성했습니다.'
-      // })
+      TelegramBotManagement.sendMessage({
+        message:
+          '금일 국내 증시의 상천주 정리 노트를 생성했습니다.'
+      })
     } else {
       logger('금일 국내 증시는 휴장입니다.')
     }
@@ -164,7 +164,7 @@ const main = async () => {
 
   TelegramBotManagement.onText(/\/generatestockreport/, async () => {
     const 상천주 = await DomesticStockManagement.get상천주()
-    const 상승봉 = await DomesticStockManagement.get1000억봉()
+    // const 상승봉 = await DomesticStockManagement.get1000억봉()
 
     // 데일리 상천주 정리
     await createDailyReviewReport(상천주)
@@ -173,10 +173,10 @@ const main = async () => {
     await createNewStockReport(상천주)
 
     // 차트상 관심주 정리 (1000억 봉)
-    await createDailyChartStudy(상승봉)
+    // await createDailyChartStudy(상승봉)
 
     TelegramBotManagement.sendMessage({
-      message: '임의로 데일리 리포트를 생성했습니다.'
+      message: '임의로 상천주 정리 노트를 생성했습니다.'
     })
   })
 }
