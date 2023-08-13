@@ -112,7 +112,7 @@ const main = async () => {
     }))
 
   // # control telegram commands
-  TelegramBotManagement.onText(/\/list_exclude_stocks/, async () => {
+  TelegramBotManagement.onText(/\/list_excluded_stocks/, async () => {
     const { rows } = await postgres.query('SELECT * FROM excludestock')
 
     let excludeStockList = ''
@@ -129,22 +129,25 @@ const main = async () => {
       })
   })
 
-  TelegramBotManagement.onText(/\/add_excluded_stock (.+)/, async (_, match) => {
-    const stockInfo = (
-      await DomesticStockManagement.searchStockInfo({
-        PDNO: match[1],
-        PRDT_TYPE_CD: 300
+  TelegramBotManagement.onText(
+    /\/add_excluded_stock (.+)/,
+    async (_, match) => {
+      const stockInfo = (
+        await DomesticStockManagement.searchStockInfo({
+          PDNO: match[1],
+          PRDT_TYPE_CD: 300
+        })
+      ).result.output
+
+      await postgres.query(
+        `INSERT INTO excludestock VALUES ('${stockInfo.shtn_pdno}', '${stockInfo.prdt_abrv_name}')`
+      )
+
+      await TelegramBotManagement.sendMessage({
+        message: `앞으로 ${stockInfo.prdt_abrv_name}(${stockInfo.shtn_pdno}) 종목을 정리하지 않습니다.`
       })
-    ).result.output
-
-    await postgres.query(
-      `INSERT INTO excludestock VALUES ('${stockInfo.shtn_pdno}', '${stockInfo.prdt_abrv_name}')`
-    )
-
-    await TelegramBotManagement.sendMessage({
-      message: `앞으로 ${stockInfo.prdt_abrv_name}(${stockInfo.shtn_pdno}) 종목을 정리하지 않습니다.`
-    })
-  })
+    }
+  )
 
   TelegramBotManagement.onText(
     /\/delete_excluded_stock (.+)/,
