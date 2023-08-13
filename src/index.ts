@@ -112,7 +112,7 @@ const main = async () => {
     }))
 
   // # control telegram commands
-  TelegramBotManagement.onText(/\/listexcludestock/, async () => {
+  TelegramBotManagement.onText(/\/list_exclude_stocks/, async () => {
     const { rows } = await postgres.query('SELECT * FROM excludestock')
 
     let excludeStockList = ''
@@ -129,7 +129,7 @@ const main = async () => {
       })
   })
 
-  TelegramBotManagement.onText(/\/addexcludestock (.+)/, async (_, match) => {
+  TelegramBotManagement.onText(/\/add_excluded_stock (.+)/, async (_, match) => {
     const stockInfo = (
       await DomesticStockManagement.searchStockInfo({
         PDNO: match[1],
@@ -147,7 +147,7 @@ const main = async () => {
   })
 
   TelegramBotManagement.onText(
-    /\/deleteexcludestock (.+)/,
+    /\/delete_excluded_stock (.+)/,
     async (_, match) => {
       const stockInfo = (
         await DomesticStockManagement.searchStockInfo({
@@ -166,7 +166,7 @@ const main = async () => {
     }
   )
 
-  TelegramBotManagement.onText(/\/generatestockreport/, async () => {
+  TelegramBotManagement.onText(/\/create_evening/, async () => {
     const indexes = await DomesticStockManagement.getIndexes()
 
     const 상천주 = await DomesticStockManagement.get상천주()
