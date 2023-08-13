@@ -18,7 +18,7 @@ import { CUSTOMER_TYPE, MarketIndex, StockInfo } from './interface/domestic'
 import StockSymbol from './templates/stock-symbol'
 import StockReport from './templates/stock-report'
 
-import checkStockToExclude from './utils/check-stock-to-exclude'
+import checkExcludedStock from './utils/check-excluded-stock'
 import { updateHeader } from './utils/axios'
 import isTokenExpired from './utils/is-token-expired'
 import { logger } from './utils/logger'
@@ -79,12 +79,12 @@ scheduleJob(
 
     if (result.output[0].bzdy_yn === 'Y') {
       const indexes = await DomesticStockManagement.getIndexes()
-    
+
       const 상천주 = await DomesticStockManagement.get상천주()
       // const 상승봉 = await DomesticStockManagement.get1000억봉()
 
       // 데일리 상천주 정리
-      await createDailyReviewReport(indexes.kospi, indexes.kosdaq, 상천주)
+      await createEvening(indexes.kospi, indexes.kosdaq, 상천주)
 
       // 정리 안되어 있는 종목들 신규 생성
       await createNewStockReport(상천주)
@@ -173,7 +173,7 @@ const main = async () => {
     // const 상승봉 = await DomesticStockManagement.get1000억봉()
 
     // 이브닝 노트 생성
-    await createDailyReviewReport(indexes.kospi, indexes.kosdaq, 상천주)
+    await createEvening(indexes.kospi, indexes.kosdaq, 상천주)
 
     // 정리 안되어 있는 종목들 신규 생성
     await createNewStockReport(상천주)
@@ -230,7 +230,7 @@ const computedTextColor = (rateOfChange: number) => {
   else return undefined
 }
 
-const createDailyReviewReport = async (
+const createEvening = async (
   kospi: MarketIndex,
   kosdaq: MarketIndex,
   marketData: StockInfo[]
@@ -256,10 +256,20 @@ const createDailyReviewReport = async (
       : kosdaq.bstp_nmix_prdy_ctrt
   }%)</span></div><br /><br /><br /><br />`
 
+  const customExcludedStocks = await checkExcludedStock()
   for (const index in marketData) {
-    if (await checkStockToExclude(marketData[index].name)) continue
+    if (customExcludedStocks.includes(marketData[index].code)) continue
 
-    const name = marketData[index].name.replaceAll(/&/g, '&amp;')
+    let name = ''
+    if (marketData[index].name.length >= 10) {
+      const { result } = await DomesticStockManagement.searchStockInfo({
+        PDNO: marketData[index].code,
+        PRDT_TYPE_CD: 300
+      })
+      name = result.output.prdt_abrv_name.replaceAll(/&/g, '&amp;')
+    } else {
+      name = marketData[index].name.replaceAll(/&/g, '&amp;')
+    }
 
     const rateOfChange = parseFloat(marketData[index].chgrate).toFixed(2)
     const volume = parseInt(marketData[index].acml_vol).toString().slice(0, -3)
@@ -300,24 +310,29 @@ const createNewStockReport = async (marketData: StockInfo[]) => {
   const stockReports = await getExistedNotes(PersonalNotebook['03. explore'])
   const tempStockReports = await getExistedNotes(PersonalNotebook['04. temp'])
 
-  const noteTitles = [...tempStockReports, ...stockReports].map(
-    (note) => note.title.split('(')[0]
+  const codesInsideNoteTitle = [...tempStockReports, ...stockReports].map(
+    (note) => note.title.split(/[()]/g)[1]
   )
-  const marketDataTitles = marketData?.map((data) => data.name)
+  const customExcludedStocks = await checkExcludedStock()
 
-  if (marketDataTitles === undefined || marketDataTitles.length === 0) return
+  const marketDataCodes = marketData?.map((data) => data.code)
+  if (marketDataCodes === undefined || marketDataCodes.length === 0) return
 
   // 이미 정리했던/정리하고 있는 종목은 제외하고, 리뷰할 종목들만 새로 노트 생성
-  for (const [index, name] of marketDataTitles.entries()) {
-    if (!noteTitles.includes(name)) {
-      // 기타 제외할 종목도 제외
-      if (!(await checkStockToExclude(name))) {
-        await EvernoteManagement.makeNote(
-          `${name}(${marketData[index].code})`,
-          StockReport(parseInt(marketData[index].stotprice)),
-          PersonalNotebook['04. temp']
-        )
-      }
+  for (const [index, code] of marketDataCodes.entries()) {
+    if (![...codesInsideNoteTitle, ...customExcludedStocks].includes(code)) {
+      const { result } = await DomesticStockManagement.searchStockInfo({
+        PDNO: code,
+        PRDT_TYPE_CD: 300
+      })
+
+      await EvernoteManagement.makeNote(
+        `${result.output.prdt_abrv_name.replaceAll(/&/g, '&amp;')}(${
+          result.output.shtn_pdno
+        })`,
+        StockReport(parseInt(marketData[index].stotprice)),
+        PersonalNotebook['04. temp']
+      )
     }
   }
 }
