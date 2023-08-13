@@ -78,11 +78,13 @@ scheduleJob(
     })
 
     if (result.output[0].bzdy_yn === 'Y') {
+      const indexes = await DomesticStockManagement.getIndexes()
+    
       const 상천주 = await DomesticStockManagement.get상천주()
       // const 상승봉 = await DomesticStockManagement.get1000억봉()
 
       // 데일리 상천주 정리
-      // await createDailyReviewReport(상천주)
+      await createDailyReviewReport(indexes.kospi, indexes.kosdaq, 상천주)
 
       // 정리 안되어 있는 종목들 신규 생성
       await createNewStockReport(상천주)
@@ -165,32 +167,13 @@ const main = async () => {
   )
 
   TelegramBotManagement.onText(/\/generatestockreport/, async () => {
-    const basedMarketIndexRequest = {
-      FID_COND_MRKT_DIV_CODE: 'U',
-      FID_INPUT_DATE_1: dayjs(new Date()).format('YYYYMMDD'),
-      FID_INPUT_DATE_2: dayjs(new Date()).format('YYYYMMDD'),
-      FID_PERIOD_DIV_CODE: 'D'
-    }
-
-    const 코스피지수 = (
-      await DomesticStockManagement.getMarketIndex({
-        FID_INPUT_ISCD: '0001',
-        ...basedMarketIndexRequest
-      })
-    ).result.output1
-
-    const 코스닥지수 = (
-      await DomesticStockManagement.getMarketIndex({
-        FID_INPUT_ISCD: '1001',
-        ...basedMarketIndexRequest
-      })
-    ).result.output1
+    const indexes = await DomesticStockManagement.getIndexes()
 
     const 상천주 = await DomesticStockManagement.get상천주()
     // const 상승봉 = await DomesticStockManagement.get1000억봉()
 
     // 이브닝 노트 생성
-    await createDailyReviewReport(코스피지수, 코스닥지수, 상천주)
+    await createDailyReviewReport(indexes.kospi, indexes.kosdaq, 상천주)
 
     // 정리 안되어 있는 종목들 신규 생성
     await createNewStockReport(상천주)

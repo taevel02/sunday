@@ -3,6 +3,7 @@ import { ServerResponse, ServerResponseCode } from '../interface/api'
 import {
   HolidayRequest,
   HolidayResponse,
+  MarketIndex,
   MarketIndexRequest,
   MarketIndexResponse,
   PSearchResultRequest,
@@ -13,6 +14,7 @@ import {
   TR_ID
 } from '../interface/domestic'
 import { api } from '../utils/axios'
+import dayjs from 'dayjs'
 
 export class DomesticStockService {
   public async checkHoliday(
@@ -138,6 +140,34 @@ export class DomesticStockService {
       return {
         code: error.response?.status ?? -1
       }
+    }
+  }
+
+  public async getIndexes(): Promise<{kospi: MarketIndex; kosdaq: MarketIndex;}> {
+    const basedMarketIndexRequest = {
+      FID_COND_MRKT_DIV_CODE: 'U',
+      FID_INPUT_DATE_1: dayjs(new Date()).format('YYYYMMDD'),
+      FID_INPUT_DATE_2: dayjs(new Date()).format('YYYYMMDD'),
+      FID_PERIOD_DIV_CODE: 'D'
+    }
+
+    const 코스피지수 = (
+      await this.getMarketIndex({
+        FID_INPUT_ISCD: '0001',
+        ...basedMarketIndexRequest
+      })
+    ).result.output1
+
+    const 코스닥지수 = (
+      await this.getMarketIndex({
+        FID_INPUT_ISCD: '1001',
+        ...basedMarketIndexRequest
+      })
+    ).result.output1
+
+    return {
+      kospi: 코스피지수,
+      kosdaq: 코스닥지수
     }
   }
 
