@@ -13,7 +13,8 @@ export type PRDT_TYPE_CD = 300 | 301 | 302 | 512 | 515 | 501 | 507 | 551
 export enum TR_ID {
   '국내휴장일조회' = 'CTCA0903R',
   '종목조건검색조회' = 'HHKST03900400',
-  '상품기본조회' = 'CTPF1604R'
+  '상품기본조회' = 'CTPF1604R',
+  '국내주식업종기간별시세' = 'FHKUP03500100'
 }
 
 export enum CUSTOMER_TYPE {
@@ -30,8 +31,9 @@ interface BaseResponse {
 export interface StockInfo {
   code: string // 종목코드
   name: string // 종목명
-  chgrate: string // 등락율
+  chgrate: string // 등락률
   acml_vol: string // 거래량
+  trade_amt: string // 거래대금
   stotprice: string // 시가총액
 }
 
@@ -50,6 +52,25 @@ export interface HolidayResponse extends BaseResponse {
     opnd_yn: string // 개장일여부
     sttl_day_yn: string // 결제일여부
   }[]
+}
+
+export interface MarketIndex {
+  bstp_nmix_prdy_vrss: string // 업종 지수 전일 대비
+  prdy_vrss_sign: string // 전일 대비 부호 - 상승: 2, 보합: 3, 하락: 5
+  bstp_nmix_prdy_ctrt: string // 업종 지수 전일 대비율
+  bstp_nmix_prpr: string // 업종 지수 현재가
+}
+
+export interface MarketIndexRequest {
+  FID_COND_MRKT_DIV_CODE: string // 조건 시장 분류 코드 - 업종: U
+  FID_INPUT_ISCD: string // 업종 상세코드 - 코스피: 0001, 코스닥 1001
+  FID_INPUT_DATE_1: string // 조회 시작일
+  FID_INPUT_DATE_2: string // 조회 종료일
+  FID_PERIOD_DIV_CODE: string // 기간분류코드 - D:일봉 W:주봉, M:월봉, Y:년봉
+}
+
+export interface MarketIndexResponse extends BaseResponse {
+  output1: MarketIndex
 }
 
 export interface PSearchResultRequest {

@@ -1,9 +1,10 @@
 import { AxiosError } from 'axios'
 import { ServerResponse, ServerResponseCode } from '../interface/api'
 import {
-  CUSTOMER_TYPE,
   HolidayRequest,
   HolidayResponse,
+  MarketIndexRequest,
+  MarketIndexResponse,
   PSearchResultRequest,
   PSearchResultResponse,
   SearchStockInfoRequest,
@@ -111,6 +112,35 @@ export class DomesticStockService {
     }
   }
 
+  public async getMarketIndex(
+    request: MarketIndexRequest
+  ): Promise<ServerResponse<MarketIndexResponse>> {
+    try {
+      const marketIndex = (
+        await api.get<MarketIndexResponse>(
+          '/uapi/domestic-stock/v1/quotations/inquire-daily-indexchartprice',
+          { params: request, headers: { tr_id: TR_ID.국내주식업종기간별시세 } }
+        )
+      ).data
+
+      if (marketIndex == undefined) {
+        return {
+          code: ServerResponseCode.NOT_FOUND
+        }
+      }
+
+      return {
+        code: ServerResponseCode.OK,
+        result: marketIndex
+      }
+    } catch (err) {
+      const error = err as AxiosError
+      return {
+        code: error.response?.status ?? -1
+      }
+    }
+  }
+
   public async get상천주(): Promise<StockInfo[]> {
     const _거래량1000만 = (
       await this.pSearchResult({
@@ -139,6 +169,7 @@ export class DomesticStockService {
     return filteredMarketData
   }
 
+  // @todo
   public async get1000억봉(): Promise<StockInfo[]> {
     const _1000억봉 = (
       await this.pSearchResult({

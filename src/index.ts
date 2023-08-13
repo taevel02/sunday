@@ -1,5 +1,6 @@
 import { Range, scheduleJob } from 'node-schedule'
 import dayjs from 'dayjs'
+import 'dayjs/locale/ko'
 
 import {
   AuthManagement,
@@ -12,7 +13,7 @@ import { postgres } from './db.config'
 import { PersonalNotebook } from './evernote.config'
 
 import { NoteMetadata, guid } from './interface/evernote'
-import { CUSTOMER_TYPE, StockInfo } from './interface/domestic'
+import { CUSTOMER_TYPE, MarketIndex, StockInfo } from './interface/domestic'
 
 import StockSymbol from './templates/stock-symbol'
 import StockReport from './templates/stock-report'
@@ -23,6 +24,8 @@ import isTokenExpired from './utils/is-token-expired'
 import { logger } from './utils/logger'
 
 postgres.connect()
+
+dayjs.locale('ko')
 
 /**
  *
@@ -79,7 +82,7 @@ scheduleJob(
       // const 상승봉 = await DomesticStockManagement.get1000억봉()
 
       // 데일리 상천주 정리
-      await createDailyReviewReport(상천주)
+      // await createDailyReviewReport(상천주)
 
       // 정리 안되어 있는 종목들 신규 생성
       await createNewStockReport(상천주)
@@ -88,8 +91,7 @@ scheduleJob(
       // await createDailyChartStudy(상승봉)
 
       TelegramBotManagement.sendMessage({
-        message:
-          '금일 국내 증시의 상천주 정리 노트를 생성했습니다.'
+        message: '금일 국내 증시의 상천주 정리 노트를 생성했습니다.'
       })
     } else {
       logger('금일 국내 증시는 휴장입니다.')
@@ -163,11 +165,32 @@ const main = async () => {
   )
 
   TelegramBotManagement.onText(/\/generatestockreport/, async () => {
+    const basedMarketIndexRequest = {
+      FID_COND_MRKT_DIV_CODE: 'U',
+      FID_INPUT_DATE_1: dayjs(new Date()).format('YYYYMMDD'),
+      FID_INPUT_DATE_2: dayjs(new Date()).format('YYYYMMDD'),
+      FID_PERIOD_DIV_CODE: 'D'
+    }
+
+    const 코스피지수 = (
+      await DomesticStockManagement.getMarketIndex({
+        FID_INPUT_ISCD: '0001',
+        ...basedMarketIndexRequest
+      })
+    ).result.output1
+
+    const 코스닥지수 = (
+      await DomesticStockManagement.getMarketIndex({
+        FID_INPUT_ISCD: '1001',
+        ...basedMarketIndexRequest
+      })
+    ).result.output1
+
     const 상천주 = await DomesticStockManagement.get상천주()
     // const 상승봉 = await DomesticStockManagement.get1000억봉()
 
-    // 데일리 상천주 정리
-    await createDailyReviewReport(상천주)
+    // 이브닝 노트 생성
+    await createDailyReviewReport(코스피지수, 코스닥지수, 상천주)
 
     // 정리 안되어 있는 종목들 신규 생성
     await createNewStockReport(상천주)
@@ -212,29 +235,63 @@ const generateAccessToken = async () => {
   }
 }
 
-const createDailyReviewReport = async (marketData: StockInfo[]) => {
-  let content = ''
+const generateSign = (index: MarketIndex) => {
+  if (index.prdy_vrss_sign === '2') return '▲'
+  else if (index.prdy_vrss_sign === '5') return '▼'
+  else return '-'
+}
+
+const computedTextColor = (rateOfChange: number) => {
+  if (rateOfChange > 0) return 'color: rgb(252, 18, 51);'
+  else if (rateOfChange < 0) return 'color: rgb(13, 58, 153);'
+  else return undefined
+}
+
+const createDailyReviewReport = async (
+  kospi: MarketIndex,
+  kosdaq: MarketIndex,
+  marketData: StockInfo[]
+) => {
+  let content = '<br />'
+
+  content += `<div><span style="${computedTextColor(
+    Number(kospi.bstp_nmix_prdy_ctrt)
+  )}">${generateSign(kospi)}</span> 코스피 <span style="${computedTextColor(
+    Number(kospi.bstp_nmix_prdy_ctrt)
+  )}">${kospi.bstp_nmix_prpr} (${
+    Number(kospi.bstp_nmix_prdy_ctrt) > 0
+      ? '+' + kospi.bstp_nmix_prdy_ctrt
+      : kospi.bstp_nmix_prdy_ctrt
+  }%)</span></div>`
+  content += `<div><span style="${computedTextColor(
+    Number(kosdaq.bstp_nmix_prdy_ctrt)
+  )}">${generateSign(kosdaq)}</span> 코스닥 <span style="${computedTextColor(
+    Number(kosdaq.bstp_nmix_prdy_ctrt)
+  )}">${kosdaq.bstp_nmix_prpr} (${
+    Number(kosdaq.bstp_nmix_prdy_ctrt) > 0
+      ? '+' + kosdaq.bstp_nmix_prdy_ctrt
+      : kosdaq.bstp_nmix_prdy_ctrt
+  }%)</span></div><br /><br /><br /><br />`
+
   for (const index in marketData) {
     if (await checkStockToExclude(marketData[index].name)) continue
 
     const name = marketData[index].name.replaceAll(/&/g, '&amp;')
 
     const rateOfChange = parseFloat(marketData[index].chgrate).toFixed(2)
-    const tradeVolume = parseInt(marketData[index].acml_vol)
-      .toString()
-      .slice(0, -3)
+    const volume = parseInt(marketData[index].acml_vol).toString().slice(0, -3)
 
     content += `${StockSymbol(
       name,
       rateOfChange,
-      tradeVolume
-    )}<br /><br /><br />`
+      volume
+    )}<br /><br /><br /><br />`
   }
 
   await EvernoteManagement.makeNote(
-    dayjs(new Date()).format('YYYY년 M월 D일'),
+    dayjs(new Date()).format('YYYY.MM.DD(ddd)'),
     content,
-    PersonalNotebook['A. 상천주 정리 및 원인 조사']
+    PersonalNotebook['01. evening']
   )
 }
 
@@ -257,10 +314,8 @@ const getExistedNotes = async (parantNotebook: guid) => {
 }
 
 const createNewStockReport = async (marketData: StockInfo[]) => {
-  const stockReports = await getExistedNotes(PersonalNotebook['D. 종목 리포트'])
-  const tempStockReports = await getExistedNotes(
-    PersonalNotebook['E. 종목 리포트 (임시)']
-  )
+  const stockReports = await getExistedNotes(PersonalNotebook['03. explore'])
+  const tempStockReports = await getExistedNotes(PersonalNotebook['04. temp'])
 
   const noteTitles = [...tempStockReports, ...stockReports].map(
     (note) => note.title.split('(')[0]
@@ -277,42 +332,9 @@ const createNewStockReport = async (marketData: StockInfo[]) => {
         await EvernoteManagement.makeNote(
           `${name}(${marketData[index].code})`,
           StockReport(parseInt(marketData[index].stotprice)),
-          PersonalNotebook['E. 종목 리포트 (임시)']
+          PersonalNotebook['04. temp']
         )
       }
     }
   }
-}
-
-const createDailyChartStudy = async (marketData: StockInfo[]) => {
-  let content = `<b>[상승봉] 1000억 봉</b><br /><br />-(0일차) `
-  for (const index in marketData) {
-    if (await checkStockToExclude(marketData[index].name)) continue
-
-    const name = marketData[index].name.replaceAll(/&/g, '&amp;')
-    content += `${name} `
-  }
-
-  const { result } = await DomesticStockManagement.checkHoliday({
-    BASS_DT: dayjs(new Date(Date.now() + 86400000)).format('YYYYMMDD'),
-    CTX_AREA_FK: '',
-    CTX_AREA_NK: ''
-  })
-
-  let caculatedDate
-  for (const index in result.output) {
-    if (result.output[index].bzdy_yn !== 'Y') continue
-    else {
-      caculatedDate = dayjs(result.output[index].bass_dt).format(
-        'YYYY년 M월 D일'
-      )
-      break
-    }
-  }
-
-  await EvernoteManagement.makeNote(
-    caculatedDate,
-    content,
-    PersonalNotebook['C. 차트상 관심주']
-  )
 }
