@@ -221,7 +221,7 @@ const generateAccessToken = async () => {
   }
 }
 
-const generateSign = (index: MarketIndex) => {
+const computedSign = (index: MarketIndex) => {
   if (index.prdy_vrss_sign === '2') return '▲'
   else if (index.prdy_vrss_sign === '5') return '▼'
   else return '-'
@@ -242,7 +242,7 @@ const createEvening = async (
 
   content += `<div><span style="${computedTextColor(
     Number(kospi.bstp_nmix_prdy_ctrt)
-  )}">${generateSign(kospi)}</span> 코스피 <span style="${computedTextColor(
+  )}">${computedSign(kospi)}</span> 코스피 <span style="${computedTextColor(
     Number(kospi.bstp_nmix_prdy_ctrt)
   )}">${kospi.bstp_nmix_prpr} (${
     Number(kospi.bstp_nmix_prdy_ctrt) > 0
@@ -251,7 +251,7 @@ const createEvening = async (
   }%)</span></div>`
   content += `<div><span style="${computedTextColor(
     Number(kosdaq.bstp_nmix_prdy_ctrt)
-  )}">${generateSign(kosdaq)}</span> 코스닥 <span style="${computedTextColor(
+  )}">${computedSign(kosdaq)}</span> 코스닥 <span style="${computedTextColor(
     Number(kosdaq.bstp_nmix_prdy_ctrt)
   )}">${kosdaq.bstp_nmix_prpr} (${
     Number(kosdaq.bstp_nmix_prdy_ctrt) > 0
