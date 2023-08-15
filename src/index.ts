@@ -48,17 +48,7 @@ const rescheduleJob = (job: schedule.Job, hour: number, minute: number) => {
   } as schedule.RecurrenceRule)
 }
 
-const checkHolidayJob = scheduleJob(4, 0, async () => {
-  if (await DomesticStockManagement.isHoliday(new Date())) {
-    rescheduleJob(generateTokenJob, 8, 40)
-    // rescheduleJob(startTradingViewJob, 9, 0)
-    // rescheduleJob(stopTradingViewJob, 15, 30)
-    rescheduleJob(generateEveningJob, 15, 40)
-    rescheduleJob(revokeTokenJob, 15, 50)
-  }
-})
-
-const generateTokenJob = scheduleJob(16, 5, async () => {
+const generateTokenJob = scheduleJob(6, 30, async () => {
   if (api.defaults.headers.common['Authorization']) {
     await revokeToken()
   }
@@ -73,6 +63,18 @@ const generateTokenJob = scheduleJob(16, 5, async () => {
   updateHeader('appkey', process.env.KIS_KEY)
   updateHeader('appsecret', process.env.KIS_SECRET)
   updateHeader('custtype', CUSTOMER_TYPE.개인)
+})
+
+const checkHolidayJob = scheduleJob(7, 0, async () => {
+  const isHoliday = await DomesticStockManagement.isHoliday(new Date())
+
+  if (isHoliday) {
+    rescheduleJob(generateTokenJob, 6, 30)
+    // rescheduleJob(startTradingViewJob, 9, 0)
+    // rescheduleJob(stopTradingViewJob, 15, 30)
+    rescheduleJob(generateEveningJob, 15, 40)
+    rescheduleJob(revokeTokenJob, 15, 50)
+  }
 })
 
 // const startTradingViewJob = scheduleJob(9, 0, async () => {})
