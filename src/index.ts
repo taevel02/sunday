@@ -1,6 +1,7 @@
-import { Range, scheduleJob } from 'node-schedule'
+import schedule from 'node-schedule'
 import dayjs from 'dayjs'
 import 'dayjs/locale/ko'
+dayjs.locale('ko')
 
 import {
   AuthManagement,
@@ -19,97 +20,92 @@ import StockSymbol from './templates/stock-symbol'
 import StockReport from './templates/stock-report'
 
 import checkExcludedStock from './utils/check-excluded-stock'
-import { updateHeader } from './utils/axios'
-import isTokenExpired from './utils/is-token-expired'
-import { logger } from './utils/logger'
+import { api, updateHeader } from './utils/axios'
 
 postgres.connect()
 
-dayjs.locale('ko')
+const scheduleJob = (
+  hour: number,
+  minute: number,
+  callback: schedule.JobCallback
+): schedule.Job =>
+  schedule.scheduleJob(
+    {
+      dayOfWeek: [new schedule.Range(1, 5)],
+      hour,
+      minute,
+      tz: 'Asia/Seoul'
+    },
+    callback
+  )
 
-/**
- *
- * 1. check for a valid token
- * 2. if the token is invalid, generate a new access token
- * 3. and then update the headers.
- */
-const checkValidToken = async () => {
-  const { rows } = await postgres.query('SELECT * FROM auth')
-  if (rows !== null && rows !== undefined) {
-    if (isTokenExpired({ exp: rows?.at(-1)?.expired_at }))
-      await generateAccessToken()
-    else {
-      logger('유효한 토큰이 이미 있습니다')
-
-      updateHeader('Authorization', `Bearer ${rows?.at(-1).access_token}`)
-      updateHeader('appkey', process.env.KIS_KEY)
-      updateHeader('appsecret', process.env.KIS_SECRET)
-      updateHeader('custtype', CUSTOMER_TYPE.개인)
-    }
-  } else {
-    await generateAccessToken()
-  }
+const rescheduleJob = (job: schedule.Job, hour: number, minute: number) => {
+  job.reschedule({
+    dayOfWeek: [new schedule.Range(1, 5)],
+    hour,
+    minute,
+    tz: 'Asia/Seoul'
+  } as schedule.RecurrenceRule)
 }
 
-scheduleJob(
-  {
-    dayOfWeek: [new Range(1, 5)], // Mon - Fri
-    hour: 15,
-    minute: 40,
-    tz: 'Asia/Seoul'
-  },
-  async () => {
-    await checkValidToken()
+const checkHolidayJob = scheduleJob(4, 0, async () => {
+  if (await DomesticStockManagement.isHoliday(new Date())) {
+    rescheduleJob(generateTokenJob, 8, 40)
+    // rescheduleJob(startTradingViewJob, 9, 0)
+    // rescheduleJob(stopTradingViewJob, 15, 30)
+    rescheduleJob(generateEveningJob, 15, 40)
+    rescheduleJob(revokeTokenJob, 15, 50)
   }
-)
+})
 
-scheduleJob(
-  {
-    dayOfWeek: [new Range(1, 5)], // Mon - Fri
-    hour: 15,
-    minute: 50,
-    tz: 'Asia/Seoul'
-  },
-  async () => {
-    const { result } = await DomesticStockManagement.checkHoliday({
-      BASS_DT: dayjs(new Date()).format('YYYYMMDD'),
-      CTX_AREA_FK: '',
-      CTX_AREA_NK: ''
-    })
-
-    if (result.output[0].bzdy_yn === 'Y') {
-      const indexes = await DomesticStockManagement.getIndexes()
-
-      const 상천주 = await DomesticStockManagement.get상천주()
-      // const 상승봉 = await DomesticStockManagement.get1000억봉()
-
-      // 데일리 상천주 정리
-      await createEvening(indexes.kospi, indexes.kosdaq, 상천주)
-
-      // 정리 안되어 있는 종목들 신규 생성
-      await createNewStockReport(상천주)
-
-      // 차트상 관심주 정리 (1000억 봉)
-      // await createDailyChartStudy(상승봉)
-
-      TelegramBotManagement.sendMessage({
-        message: '금일 국내 증시의 상천주 정리 노트를 생성했습니다.'
-      })
-    } else {
-      logger('금일 국내 증시는 휴장입니다.')
-    }
+const generateTokenJob = scheduleJob(16, 5, async () => {
+  if (api.defaults.headers.common['Authorization']) {
+    await revokeToken()
   }
-)
 
+  const { result } = await AuthManagement.verify({
+    grant_type: 'client_credentials',
+    appkey: process.env.KIS_KEY,
+    appsecret: process.env.KIS_SECRET
+  })
+
+  updateHeader('Authorization', `${result.token_type} ${result.access_token}`)
+  updateHeader('appkey', process.env.KIS_KEY)
+  updateHeader('appsecret', process.env.KIS_SECRET)
+  updateHeader('custtype', CUSTOMER_TYPE.개인)
+})
+
+// const startTradingViewJob = scheduleJob(9, 0, async () => {})
+
+// const stopTradingViewJob = scheduleJob(15, 30, async () => {})
+
+const generateEveningJob = scheduleJob(15, 40, async () => {
+  const indexes = await DomesticStockManagement.getIndexes()
+  const 상천주 = await DomesticStockManagement.get상천주()
+
+  // 이브닝 & 신규종목 리포트 생성
+  await createEvening(indexes.kospi, indexes.kosdaq, 상천주)
+  await createNewStockReport(상천주)
+
+  TelegramBotManagement.sendMessage({
+    message: '금일 이브닝을 생성했습니다.'
+  })
+})
+
+const revokeTokenJob = scheduleJob(15, 50, async () => {
+  await revokeToken()
+})
+
+// # Sunday-AI is running...
 const main = async () => {
-  await checkValidToken()
+  const headersToUpdate = ['Authorization', 'appkey', 'appsecret', 'custtype']
+  headersToUpdate.forEach((header) => updateHeader(header))
 
-  // # Sunday-AI is running...
-  logger('Sunday-AI is running...')
-  process.env.NODE_ENV === 'production' &&
-    (await TelegramBotManagement.sendMessage({
-      message: 'Sunday-AI is running...'
-    }))
+  process.env.NODE_ENV === 'production'
+    ? await TelegramBotManagement.sendMessage({
+        message: 'Sunday-AI is running...'
+      })
+    : console.log('Sunday-AI is running...')
 
   // # control telegram commands
   TelegramBotManagement.onText(/\/list_excluded_stocks/, async () => {
@@ -121,11 +117,11 @@ const main = async () => {
 
     if (excludeStockList === '')
       await TelegramBotManagement.sendMessage({
-        message: '정리에서 제외한 개별종목이 없습니다.'
+        message: '모든 종목을 정리하고 있습니다.'
       })
     else
       await TelegramBotManagement.sendMessage({
-        message: `정리에서 제외한 개별종목은 다음과 같습니다.\n\n${excludeStockList}`
+        message: `정리하지 않는 종목은 다음과 같습니다.\n\n${excludeStockList}`
       })
   })
 
@@ -171,54 +167,28 @@ const main = async () => {
 
   TelegramBotManagement.onText(/\/create_evening/, async () => {
     const indexes = await DomesticStockManagement.getIndexes()
-
     const 상천주 = await DomesticStockManagement.get상천주()
-    // const 상승봉 = await DomesticStockManagement.get1000억봉()
 
-    // 이브닝 노트 생성
+    // 이브닝 & 신규종목 리포트 생성
     await createEvening(indexes.kospi, indexes.kosdaq, 상천주)
-
-    // 정리 안되어 있는 종목들 신규 생성
     await createNewStockReport(상천주)
 
-    // 차트상 관심주 정리 (1000억 봉)
-    // await createDailyChartStudy(상승봉)
-
     TelegramBotManagement.sendMessage({
-      message: '임의로 상천주 정리 노트를 생성했습니다.'
+      message: '임의로 이브닝을 생성했습니다.'
     })
   })
 }
 main()
 
-const generateAccessToken = async () => {
-  const { result } = await AuthManagement.verify({
-    grant_type: 'client_credentials',
+const revokeToken = async () => {
+  await AuthManagement.revoke({
     appkey: process.env.KIS_KEY,
-    appsecret: process.env.KIS_SECRET
+    appsecret: process.env.KIS_SECRET,
+    token: api.defaults.headers.common['Authorization'].toString().split(' ')[1]
   })
 
-  if (result) {
-    /**
-     *
-     * @todo 인젝션 방지를 위해 쿼리 파라미터화. 두 번째 매개변수로 쿼리 매개변수를 전달하는 것이 좋습니다.
-     */
-    await postgres.query(
-      `INSERT INTO auth (access_token, expired_at) VALUES ('${
-        result.access_token
-      }', ${Number(Date.now().valueOf() / 1000) + result.expires_in})`
-    )
-
-    updateHeader('Authorization', `${result.token_type} ${result.access_token}`)
-    updateHeader('appkey', process.env.KIS_KEY)
-    updateHeader('appsecret', process.env.KIS_SECRET)
-    updateHeader('custtype', CUSTOMER_TYPE.개인)
-  } else {
-    updateHeader('Authorization')
-    updateHeader('appkey')
-    updateHeader('appsecret')
-    updateHeader('custtype', CUSTOMER_TYPE.개인)
-  }
+  const headersToUpdate = ['Authorization', 'appkey', 'appsecret', 'custtype']
+  headersToUpdate.forEach((header) => updateHeader(header))
 }
 
 const computedSign = (index: MarketIndex) => {
@@ -238,7 +208,15 @@ const createEvening = async (
   kosdaq: MarketIndex,
   marketData: StockInfo[]
 ) => {
+  const customExcludedStocks = await checkExcludedStock()
   let content = '<br />'
+
+  const addStockSymbol = (name: string, rateOfChange: number, volume: number) =>
+    `${StockSymbol(
+      name,
+      rateOfChange.toFixed(2),
+      volume.toString().slice(0, -3)
+    )}<br /><br /><br /><br />`
 
   content += `<div><span style="${computedTextColor(
     Number(kospi.bstp_nmix_prdy_ctrt)
@@ -249,6 +227,7 @@ const createEvening = async (
       ? '+' + kospi.bstp_nmix_prdy_ctrt
       : kospi.bstp_nmix_prdy_ctrt
   }%)</span></div>`
+
   content += `<div><span style="${computedTextColor(
     Number(kosdaq.bstp_nmix_prdy_ctrt)
   )}">${computedSign(kosdaq)}</span> 코스닥 <span style="${computedTextColor(
@@ -259,33 +238,29 @@ const createEvening = async (
       : kosdaq.bstp_nmix_prdy_ctrt
   }%)</span></div><br /><br /><br /><br />`
 
-  const customExcludedStocks = await checkExcludedStock()
-  for (const index in marketData) {
-    if (customExcludedStocks.includes(marketData[index].code)) continue
+  for (const stockData of marketData) {
+    if (customExcludedStocks.includes(stockData.code)) continue
 
-    let name = ''
-    if (marketData[index].name.length >= 10) {
-      const { result } = await DomesticStockManagement.searchStockInfo({
-        PDNO: marketData[index].code,
-        PRDT_TYPE_CD: 300
-      })
-      name = result.output.prdt_abrv_name.replaceAll(/&/g, '&amp;')
-    } else {
-      name = marketData[index].name.replaceAll(/&/g, '&amp;')
-    }
+    const name =
+      stockData.name.length >= 10
+        ? (
+            await DomesticStockManagement.searchStockInfo({
+              PDNO: stockData.code,
+              PRDT_TYPE_CD: 300
+            })
+          ).result.output.prdt_abrv_name.replaceAll(/&/g, '&amp;')
+        : stockData.name.replaceAll(/&/g, '&amp;')
 
-    const rateOfChange = parseFloat(marketData[index].chgrate).toFixed(2)
-    const volume = parseInt(marketData[index].acml_vol).toString().slice(0, -3)
-
-    content += `${StockSymbol(
+    content += addStockSymbol(
       name,
-      rateOfChange,
-      volume
-    )}<br /><br /><br /><br />`
+      parseFloat(stockData.chgrate),
+      parseInt(stockData.acml_vol)
+    )
   }
 
+  const title = dayjs(new Date()).format('YYYY.MM.DD(ddd)')
   await EvernoteManagement.makeNote(
-    dayjs(new Date()).format('YYYY.MM.DD(ddd)'),
+    title,
     content,
     PersonalNotebook['01. evening']
   )

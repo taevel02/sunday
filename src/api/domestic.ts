@@ -1,7 +1,6 @@
 import { AxiosError } from 'axios'
 import { ServerResponse, ServerResponseCode } from '../interface/api'
 import {
-  HolidayRequest,
   HolidayResponse,
   MarketIndex,
   MarketIndexRequest,
@@ -17,15 +16,22 @@ import { api } from '../utils/axios'
 import dayjs from 'dayjs'
 
 export class DomesticStockService {
-  public async checkHoliday(
-    request: HolidayRequest
-  ): Promise<ServerResponse<HolidayResponse>> {
+  /**
+   *
+   * @param date
+   * @returns true - 휴장일, false - 휴장일 아님, undefined - 에러
+   */
+  public async isHoliday(date: Date): Promise<Boolean> {
     try {
       const checkHolidayResults = (
         await api.get<HolidayResponse>(
           '/uapi/domestic-stock/v1/quotations/chk-holiday',
           {
-            params: request,
+            params: {
+              BASS_DT: dayjs(date).format('YYYYMMDD'),
+              CTX_AREA_NK: '',
+              CTX_AREA_FK: ''
+            },
             headers: {
               tr_id: TR_ID.국내휴장일조회
             }
@@ -33,21 +39,14 @@ export class DomesticStockService {
         )
       ).data
 
-      if (checkHolidayResults === undefined) {
-        return {
-          code: ServerResponseCode.NOT_FOUND
-        }
-      }
+      if (checkHolidayResults.rt_cd !== '0') return undefined
 
-      return {
-        code: ServerResponseCode.OK,
-        result: checkHolidayResults
-      }
+      if (checkHolidayResults.output[0].bzdy_yn === 'N') return true
+
+      return false
     } catch (err) {
       const error = err as AxiosError
-      return {
-        code: error.response?.status ?? -1
-      }
+      throw error
     }
   }
 
@@ -143,7 +142,10 @@ export class DomesticStockService {
     }
   }
 
-  public async getIndexes(): Promise<{kospi: MarketIndex; kosdaq: MarketIndex;}> {
+  public async getIndexes(): Promise<{
+    kospi: MarketIndex
+    kosdaq: MarketIndex
+  }> {
     const basedMarketIndexRequest = {
       FID_COND_MRKT_DIV_CODE: 'U',
       FID_INPUT_DATE_1: dayjs(new Date()).format('YYYYMMDD'),

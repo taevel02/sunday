@@ -1,5 +1,4 @@
 import Evernote, { NoteStore } from 'evernote'
-import { logger } from '../utils/logger'
 import { guid } from '../interface/evernote'
 
 const evernoteClient = new Evernote.Client({
@@ -73,7 +72,7 @@ export class EvernoteService {
       .createNote(ourNote)
       .then((note: any) => {
         // Do something with `note`
-        logger(`Successfully created, ${note.title}`)
+        console.log(`Successfully created, ${note.title}`)
       })
       .catch((error: any) => {
         // Something was wrong with the note data

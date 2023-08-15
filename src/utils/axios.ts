@@ -1,7 +1,6 @@
 import axios, { AxiosError, AxiosHeaders } from 'axios'
 import axiosRetry from 'axios-retry'
 
-import { logger } from './logger'
 import { TelegramBotManagement } from '../api'
 
 const instance = axios.create({
@@ -21,7 +20,7 @@ export const api = axios.create({
 axiosRetry(api, {
   retries: 3,
   retryCondition: (error) => {
-    logger(`네트워크 요청 불량으로 재시도 중입니다. (에러코드 ${error.code}}`)
+    console.error(`네트워크 요청 불량으로 재시도 중입니다. (에러코드 ${error.code}}`)
     return true
   }
 })
@@ -59,7 +58,7 @@ function responseErrorHandler(err: Error | AxiosError) {
     }
   }
 
-  logger(reportMessage)
+  console.error(reportMessage)
   TelegramBotManagement.sendMessage({
     message: reportMessage,
     type: 'error'

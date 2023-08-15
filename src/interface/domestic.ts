@@ -37,12 +37,6 @@ export interface StockInfo {
   stotprice: string // 시가총액
 }
 
-export interface HolidayRequest {
-  BASS_DT: string
-  CTX_AREA_NK: string
-  CTX_AREA_FK: string
-}
-
 export interface HolidayResponse extends BaseResponse {
   output: {
     bass_dt: string
