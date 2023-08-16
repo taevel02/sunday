@@ -59,10 +59,6 @@ function responseErrorHandler(err: Error | AxiosError) {
   }
 
   console.error(reportMessage)
-  TelegramBotManagement.sendMessage({
-    message: reportMessage,
-    type: 'error'
-  })
 
   return Promise.reject(err)
 }

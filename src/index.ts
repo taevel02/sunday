@@ -48,21 +48,10 @@ const rescheduleJob = (job: schedule.Job, hour: number, minute: number) => {
   } as schedule.RecurrenceRule)
 }
 
-const generateTokenJob = scheduleJob(6, 30, async () => {
-  if (api.defaults.headers.common['Authorization']) {
-    await revokeToken()
-  }
+const generateTokenJob = scheduleJob(6, 0, async () => {
+  await generateToken()
 
-  const { result } = await AuthManagement.verify({
-    grant_type: 'client_credentials',
-    appkey: process.env.KIS_KEY,
-    appsecret: process.env.KIS_SECRET
-  })
-
-  updateHeader('Authorization', `${result.token_type} ${result.access_token}`)
-  updateHeader('appkey', process.env.KIS_KEY)
-  updateHeader('appsecret', process.env.KIS_SECRET)
-  updateHeader('custtype', CUSTOMER_TYPE.개인)
+  console.log('Complete generating token.')
 })
 
 const checkHolidayJob = scheduleJob(7, 0, async () => {
@@ -75,6 +64,8 @@ const checkHolidayJob = scheduleJob(7, 0, async () => {
     rescheduleJob(generateEveningJob, 15, 40)
     rescheduleJob(revokeTokenJob, 15, 50)
   }
+
+  console.log('Complete checking holiday.')
 })
 
 // const startTradingViewJob = scheduleJob(9, 0, async () => {})
@@ -92,6 +83,8 @@ const generateEveningJob = scheduleJob(15, 40, async () => {
   TelegramBotManagement.sendMessage({
     message: '금일 이브닝을 생성했습니다.'
   })
+
+  console.log('Complete generating evening.')
 })
 
 const revokeTokenJob = scheduleJob(15, 50, async () => {
@@ -100,14 +93,13 @@ const revokeTokenJob = scheduleJob(15, 50, async () => {
 
 // # Sunday-AI is running...
 const main = async () => {
-  const headersToUpdate = ['Authorization', 'appkey', 'appsecret', 'custtype']
-  headersToUpdate.forEach((header) => updateHeader(header))
+  console.log('Sunday-AI is running...')
+  process.env.NODE_ENV === 'production' &&
+    (await TelegramBotManagement.sendMessage({
+      message: 'Sunday-AI is running...'
+    }))
 
-  process.env.NODE_ENV === 'production'
-    ? await TelegramBotManagement.sendMessage({
-        message: 'Sunday-AI is running...'
-      })
-    : console.log('Sunday-AI is running...')
+  await generateToken()
 
   // # control telegram commands
   TelegramBotManagement.onText(/\/list_excluded_stocks/, async () => {
@@ -168,6 +160,8 @@ const main = async () => {
   )
 
   TelegramBotManagement.onText(/\/create_evening/, async () => {
+    await generateToken()
+
     const indexes = await DomesticStockManagement.getIndexes()
     const 상천주 = await DomesticStockManagement.get상천주()
 
@@ -182,12 +176,36 @@ const main = async () => {
 }
 main()
 
-const revokeToken = async () => {
-  await AuthManagement.revoke({
+const generateToken = async () => {
+  if (api.defaults.headers.common['Authorization']) {
+    await revokeToken()
+  }
+
+  const { result } = await AuthManagement.verify({
+    grant_type: 'client_credentials',
     appkey: process.env.KIS_KEY,
-    appsecret: process.env.KIS_SECRET,
-    token: api.defaults.headers.common['Authorization'].toString().split(' ')[1]
+    appsecret: process.env.KIS_SECRET
   })
+
+  updateHeader('Authorization', `${result.token_type} ${result.access_token}`)
+  updateHeader('appkey', process.env.KIS_KEY)
+  updateHeader('appsecret', process.env.KIS_SECRET)
+  updateHeader('custtype', CUSTOMER_TYPE.개인)
+}
+
+const revokeToken = async () => {
+  if (
+    api.defaults.headers.common['Authorization'] !== undefined ||
+    api.defaults.headers.common['Authorization'] === ''
+  ) {
+    await AuthManagement.revoke({
+      appkey: process.env.KIS_KEY,
+      appsecret: process.env.KIS_SECRET,
+      token: api.defaults.headers.common['Authorization']
+        .toString()
+        .split(' ')[1]
+    })
+  }
 
   const headersToUpdate = ['Authorization', 'appkey', 'appsecret', 'custtype']
   headersToUpdate.forEach((header) => updateHeader(header))
