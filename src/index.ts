@@ -48,10 +48,8 @@ const rescheduleJob = (job: schedule.Job, hour: number, minute: number) => {
   } as schedule.RecurrenceRule)
 }
 
-const generateTokenJob = scheduleJob(6, 0, async () => {
+const generateTokenJob = scheduleJob(6, 30, async () => {
   await generateToken()
-
-  console.log('Complete generating token.')
 })
 
 const checkHolidayJob = scheduleJob(7, 0, async () => {
@@ -73,18 +71,7 @@ const checkHolidayJob = scheduleJob(7, 0, async () => {
 // const stopTradingViewJob = scheduleJob(15, 30, async () => {})
 
 const generateEveningJob = scheduleJob(15, 40, async () => {
-  const indexes = await DomesticStockManagement.getIndexes()
-  const 상천주 = await DomesticStockManagement.get상천주()
-
-  // 이브닝 & 신규종목 리포트 생성
-  await createEvening(indexes.kospi, indexes.kosdaq, 상천주)
-  await createNewStockReport(상천주)
-
-  TelegramBotManagement.sendMessage({
-    message: '금일 이브닝을 생성했습니다.'
-  })
-
-  console.log('Complete generating evening.')
+  await generateEvening()
 })
 
 const revokeTokenJob = scheduleJob(15, 50, async () => {
@@ -98,8 +85,6 @@ const main = async () => {
     (await TelegramBotManagement.sendMessage({
       message: 'Sunday-AI is running...'
     }))
-
-  await generateToken()
 
   // # control telegram commands
   TelegramBotManagement.onText(/\/list_excluded_stocks/, async () => {
@@ -161,25 +146,13 @@ const main = async () => {
 
   TelegramBotManagement.onText(/\/create_evening/, async () => {
     await generateToken()
-
-    const indexes = await DomesticStockManagement.getIndexes()
-    const 상천주 = await DomesticStockManagement.get상천주()
-
-    // 이브닝 & 신규종목 리포트 생성
-    await createEvening(indexes.kospi, indexes.kosdaq, 상천주)
-    await createNewStockReport(상천주)
-
-    TelegramBotManagement.sendMessage({
-      message: '임의로 이브닝을 생성했습니다.'
-    })
+    await generateEvening()
   })
 }
 main()
 
 const generateToken = async () => {
-  if (api.defaults.headers.common['Authorization']) {
-    await revokeToken()
-  }
+  await revokeToken()
 
   const { result } = await AuthManagement.verify({
     grant_type: 'client_credentials',
@@ -191,13 +164,12 @@ const generateToken = async () => {
   updateHeader('appkey', process.env.KIS_KEY)
   updateHeader('appsecret', process.env.KIS_SECRET)
   updateHeader('custtype', CUSTOMER_TYPE.개인)
+
+  console.log('Complete generating token.')
 }
 
 const revokeToken = async () => {
-  if (
-    api.defaults.headers.common['Authorization'] !== undefined ||
-    api.defaults.headers.common['Authorization'] === ''
-  ) {
+  if (api.defaults.headers.common['Authorization']) {
     await AuthManagement.revoke({
       appkey: process.env.KIS_KEY,
       appsecret: process.env.KIS_SECRET,
@@ -205,10 +177,27 @@ const revokeToken = async () => {
         .toString()
         .split(' ')[1]
     })
+
+    console.log('Complete revoking token.')
   }
 
   const headersToUpdate = ['Authorization', 'appkey', 'appsecret', 'custtype']
   headersToUpdate.forEach((header) => updateHeader(header))
+}
+
+const generateEvening = async () => {
+  const indexes = await DomesticStockManagement.getIndexes()
+  const 상천주 = await DomesticStockManagement.get상천주()
+
+  // 이브닝 & 신규종목 리포트 생성
+  await createEvening(indexes.kospi, indexes.kosdaq, 상천주)
+  await createNewStockReport(상천주)
+
+  TelegramBotManagement.sendMessage({
+    message: '금일 이브닝을 생성했습니다.'
+  })
+
+  console.log('Complete generating evening.')
 }
 
 const computedSign = (index: MarketIndex) => {
