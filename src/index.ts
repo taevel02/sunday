@@ -20,7 +20,7 @@ import StockSymbol from './templates/stock-symbol'
 import StockReport from './templates/stock-report'
 
 import checkExcludedStock from './utils/check-excluded-stock'
-import { api, updateHeader } from './utils/axios'
+import { KIS_API, updateHeader } from './utils/axios'
 
 postgres.connect()
 
@@ -48,11 +48,13 @@ const rescheduleJob = (job: schedule.Job, hour: number, minute: number) => {
   } as schedule.RecurrenceRule)
 }
 
-const generateTokenJob = scheduleJob(6, 30, async () => {
+// @todo: change to 6:30
+const generateTokenJob = scheduleJob(15, 30, async () => {
   await generateToken()
 })
 
-const checkHolidayJob = scheduleJob(7, 0, async () => {
+// @todo: change to 7:00
+const checkHolidayJob = scheduleJob(15, 35, async () => {
   const isHoliday = await DomesticStockManagement.isHoliday(new Date())
 
   if (isHoliday) {
@@ -169,11 +171,11 @@ const generateToken = async () => {
 }
 
 const revokeToken = async () => {
-  if (api.defaults.headers.common['Authorization']) {
+  if (KIS_API.defaults.headers.common['Authorization']) {
     await AuthManagement.revoke({
       appkey: process.env.KIS_KEY,
       appsecret: process.env.KIS_SECRET,
-      token: api.defaults.headers.common['Authorization']
+      token: KIS_API.defaults.headers.common['Authorization']
         .toString()
         .split(' ')[1]
     })
@@ -185,9 +187,67 @@ const revokeToken = async () => {
   headersToUpdate.forEach((header) => updateHeader(header))
 }
 
+const getIndexes = async (): Promise<{
+  kospi: MarketIndex
+  kosdaq: MarketIndex
+}> => {
+  const basedMarketIndexRequest = {
+    FID_COND_MRKT_DIV_CODE: 'U',
+    FID_INPUT_DATE_1: dayjs(new Date()).format('YYYYMMDD'),
+    FID_INPUT_DATE_2: dayjs(new Date()).format('YYYYMMDD'),
+    FID_PERIOD_DIV_CODE: 'D'
+  }
+
+  const 코스피지수 = (
+    await DomesticStockManagement.getMarketIndex({
+      FID_INPUT_ISCD: '0001',
+      ...basedMarketIndexRequest
+    })
+  ).result.output1
+
+  const 코스닥지수 = (
+    await DomesticStockManagement.getMarketIndex({
+      FID_INPUT_ISCD: '1001',
+      ...basedMarketIndexRequest
+    })
+  ).result.output1
+
+  return {
+    kospi: 코스피지수,
+    kosdaq: 코스닥지수
+  }
+}
+
+const get상천주 = async (): Promise<StockInfo[]> => {
+  const _거래량1000만 = (
+    await DomesticStockManagement.pSearchResult({
+      user_id: 'taevel02',
+      seq: 1
+    })
+  )?.result?.output2
+  const _상한가 = (
+    await DomesticStockManagement.pSearchResult({
+      user_id: 'taevel02',
+      seq: 2
+    })
+  )?.result?.output2
+
+  if (_상한가 === undefined) {
+    return _거래량1000만 || []
+  }
+
+  const filteredMarketData = _상한가.concat(
+    _거래량1000만.filter(
+      (vol) => !_상한가.some((upperLimit) => upperLimit.code === vol.code)
+    )
+  )
+
+  return filteredMarketData
+}
+
 const generateEvening = async () => {
-  const indexes = await DomesticStockManagement.getIndexes()
-  const 상천주 = await DomesticStockManagement.get상천주()
+  const indexes = await getIndexes()
+  const 상천주 = await get상천주()
 
   // 이브닝 & 신규종목 리포트 생성
   await createEvening(indexes.kospi, indexes.kosdaq, 상천주)
@@ -200,7 +260,7 @@ const generateEvening = async () => {
   console.log('Complete generating evening.')
 }
 
-const computedSign = (index: MarketIndex) => {
+const computedSign = (index: MarketIndex): string => {
   if (index.prdy_vrss_sign === '2') return '▲'
   else if (index.prdy_vrss_sign === '5') return '▼'
   else return '-'

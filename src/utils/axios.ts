@@ -9,7 +9,7 @@ const instance = axios.create({
 
 export default instance
 
-export const api = axios.create({
+export const KIS_API = axios.create({
   baseURL: 'https://openapi.koreainvestment.com:9443',
   headers: {
     'Content-Type': 'application/json; charset=UTF-8'
@@ -17,10 +17,12 @@ export const api = axios.create({
   timeout: 3000
 })
 
-axiosRetry(api, {
+axiosRetry(KIS_API, {
   retries: 3,
   retryCondition: (error) => {
-    console.error(`네트워크 요청 불량으로 재시도 중입니다. (에러코드 ${error.code}}`)
+    console.error(
+      `네트워크 요청 불량으로 재시도 중입니다. (에러코드 ${error.code}}`
+    )
     return true
   }
 })
@@ -67,11 +69,11 @@ export function updateHeader(
   key: string | number,
   value?: string | number | boolean | AxiosHeaders | string[]
 ) {
-  if (value) api.defaults.headers.common[key] = value
-  else delete api.defaults.headers.common[key]
+  if (value) KIS_API.defaults.headers.common[key] = value
+  else delete KIS_API.defaults.headers.common[key]
 }
 
-api.interceptors.response.use(
+KIS_API.interceptors.response.use(
   (res) => res,
   (err: Error | AxiosError) => responseErrorHandler(err)
 )

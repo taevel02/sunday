@@ -2,17 +2,15 @@ import { AxiosError } from 'axios'
 import { ServerResponse, ServerResponseCode } from '../interface/api'
 import {
   HolidayResponse,
-  MarketIndex,
   MarketIndexRequest,
   MarketIndexResponse,
   PSearchResultRequest,
   PSearchResultResponse,
   SearchStockInfoRequest,
   SearchStockInfoResponse,
-  StockInfo,
   TR_ID
 } from '../interface/domestic'
-import { api } from '../utils/axios'
+import { KIS_API } from '../utils/axios'
 import dayjs from 'dayjs'
 
 export class DomesticStockService {
@@ -24,7 +22,7 @@ export class DomesticStockService {
   public async isHoliday(date: Date): Promise<Boolean> {
     try {
       const checkHolidayResults = (
-        await api.get<HolidayResponse>(
+        await KIS_API.get<HolidayResponse>(
           '/uapi/domestic-stock/v1/quotations/chk-holiday',
           {
             params: {
@@ -55,7 +53,7 @@ export class DomesticStockService {
   ): Promise<ServerResponse<PSearchResultResponse>> {
     try {
       const pSearchResults = (
-        await api.get<PSearchResultResponse>(
+        await KIS_API.get<PSearchResultResponse>(
           '/uapi/domestic-stock/v1/quotations/psearch-result',
           {
             params: request,
@@ -89,7 +87,7 @@ export class DomesticStockService {
   ): Promise<ServerResponse<SearchStockInfoResponse>> {
     try {
       const searchStockInfoResults = (
-        await api.get<SearchStockInfoResponse>(
+        await KIS_API.get<SearchStockInfoResponse>(
           '/uapi/domestic-stock/v1/quotations/search-info',
           { params: request, headers: { tr_id: TR_ID.상품기본조회 } }
         )
@@ -118,7 +116,7 @@ export class DomesticStockService {
   ): Promise<ServerResponse<MarketIndexResponse>> {
     try {
       const marketIndex = (
-        await api.get<MarketIndexResponse>(
+        await KIS_API.get<MarketIndexResponse>(
           '/uapi/domestic-stock/v1/quotations/inquire-daily-indexchartprice',
           { params: request, headers: { tr_id: TR_ID.국내주식업종기간별시세 } }
         )
@@ -140,78 +138,5 @@ export class DomesticStockService {
         code: error.response?.status ?? -1
       }
     }
-  }
-
-  public async getIndexes(): Promise<{
-    kospi: MarketIndex
-    kosdaq: MarketIndex
-  }> {
-    const basedMarketIndexRequest = {
-      FID_COND_MRKT_DIV_CODE: 'U',
-      FID_INPUT_DATE_1: dayjs(new Date()).format('YYYYMMDD'),
-      FID_INPUT_DATE_2: dayjs(new Date()).format('YYYYMMDD'),
-      FID_PERIOD_DIV_CODE: 'D'
-    }
-
-    const 코스피지수 = (
-      await this.getMarketIndex({
-        FID_INPUT_ISCD: '0001',
-        ...basedMarketIndexRequest
-      })
-    ).result.output1
-
-    const 코스닥지수 = (
-      await this.getMarketIndex({
-        FID_INPUT_ISCD: '1001',
-        ...basedMarketIndexRequest
-      })
-    ).result.output1
-
-    return {
-      kospi: 코스피지수,
-      kosdaq: 코스닥지수
-    }
-  }
-
-  public async get상천주(): Promise<StockInfo[]> {
-    const _거래량1000만 = (
-      await this.pSearchResult({
-        user_id: 'taevel02',
-        seq: 1
-      })
-    )?.result?.output2
-    const _상한가 = (
-      await this.pSearchResult({
-        user_id: 'taevel02',
-        seq: 2
-      })
-    )?.result?.output2
-
-    if (_상한가 === undefined) {
-      if (_거래량1000만 === undefined) return []
-      else return _거래량1000만
-    }
-
-    const filteredMarketData = _상한가.concat(
-      _거래량1000만.filter(
-        (vol) => !_상한가.some((upperLimit) => upperLimit.code === vol.code)
-      )
-    )
-
-    return filteredMarketData
-  }
-
-  // @todo
-  public async get1000억봉(): Promise<StockInfo[]> {
-    const _1000억봉 = (
-      await this.pSearchResult({
-        user_id: 'taevel02',
-        seq: 0
-      })
-    )?.result?.output2
-
-    if (_1000억봉 === undefined) return []
-
-    return _1000억봉
   }
 }
