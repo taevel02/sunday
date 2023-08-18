@@ -5,6 +5,6 @@
   "deploy": {
     "numReplicas": 1,
     "startCommand": "pnpm start",
-    "restartPolicyType": "NEVER"
+    "restartPolicyType": "on_failure"
   }
 }
