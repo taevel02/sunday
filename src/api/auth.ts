@@ -6,7 +6,7 @@ import {
   AuthVerifyRequest,
   AuthVerifyResponse
 } from '../interface/auth'
-import { api } from '../utils/axios'
+import { KIS_API } from '../utils/axios'
 
 export class AuthService {
   public async verify(
@@ -14,7 +14,7 @@ export class AuthService {
   ): Promise<ServerResponse<AuthVerifyResponse>> {
     try {
       const authVerifyResults = (
-        await api.post<AuthVerifyResponse>('/oauth2/tokenP', request)
+        await KIS_API.post<AuthVerifyResponse>('/oauth2/tokenP', request)
       ).data
 
       if (authVerifyResults === undefined) {
@@ -40,7 +40,7 @@ export class AuthService {
   ): Promise<ServerResponse<AuthRevokeResponse>> {
     try {
       const authRevokeResults = (
-        await api.post<
+        await KIS_API.post<
           AuthRevokeRequest,
           AxiosResponse<ServerResponse<AuthRevokeResponse>>
         >('/oauth2/revokeP', request)
