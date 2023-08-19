@@ -1,8 +1,6 @@
 import axios, { AxiosError, AxiosHeaders } from 'axios'
 import axiosRetry from 'axios-retry'
 
-import { TelegramBotManagement } from '../api'
-
 const instance = axios.create({
   baseURL: 'https://openapi.koreainvestment.com:9443'
 })
