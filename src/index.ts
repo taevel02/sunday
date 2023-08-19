@@ -1,4 +1,6 @@
 import schedule from 'node-schedule'
+import { Telegraf } from 'telegraf'
+
 import dayjs from 'dayjs'
 import 'dayjs/locale/ko'
 dayjs.locale('ko')
@@ -6,8 +8,7 @@ dayjs.locale('ko')
 import {
   AuthManagement,
   DomesticStockManagement,
-  EvernoteManagement,
-  TelegramBotManagement
+  EvernoteManagement
 } from './api'
 
 import { postgres } from './db.config'
@@ -23,6 +24,12 @@ import checkExcludedStock from './utils/check-excluded-stock'
 import { KIS_API, updateHeader } from './utils/axios'
 
 postgres.connect()
+
+const telegramBot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN)
+
+const sendMessage = (message: string) => {
+  telegramBot.telegram.sendMessage(process.env.TELEGRAM_CHAT_ID, message)
+}
 
 const scheduleJob = (
   hour: number,
@@ -58,7 +65,8 @@ const checkHolidayJob = scheduleJob(15, 35, async () => {
   const isHoliday = await DomesticStockManagement.isHoliday(new Date())
 
   if (isHoliday) {
-    rescheduleJob(generateTokenJob, 6, 30)
+    // @todo: change to 6:30
+    rescheduleJob(generateTokenJob, 15, 30)
     // rescheduleJob(startTradingViewJob, 9, 0)
     // rescheduleJob(stopTradingViewJob, 15, 30)
     rescheduleJob(generateEveningJob, 15, 40)
@@ -79,79 +87,6 @@ const generateEveningJob = scheduleJob(15, 40, async () => {
 const revokeTokenJob = scheduleJob(15, 50, async () => {
   await revokeToken()
 })
-
-// # Sunday-AI is running...
-const main = async () => {
-  console.log('Sunday-AI is running...')
-  process.env.NODE_ENV === 'production' &&
-    (await TelegramBotManagement.sendMessage({
-      message: 'Sunday-AI is running...'
-    }))
-
-  // # control telegram commands
-  TelegramBotManagement.onText(/\/list_excluded_stocks/, async () => {
-    const { rows } = await postgres.query('SELECT * FROM excludestock')
-
-    let excludeStockList = ''
-    for (const [index, row] of rows.entries())
-      excludeStockList += `${index + 1}/ ${row.name}(${row.id})\n`
-
-    if (excludeStockList === '')
-      await TelegramBotManagement.sendMessage({
-        message: '모든 종목을 정리하고 있습니다.'
-      })
-    else
-      await TelegramBotManagement.sendMessage({
-        message: `정리하지 않는 종목은 다음과 같습니다.\n\n${excludeStockList}`
-      })
-  })
-
-  TelegramBotManagement.onText(
-    /\/add_excluded_stock (.+)/,
-    async (_, match) => {
-      const stockInfo = (
-        await DomesticStockManagement.searchStockInfo({
-          PDNO: match[1],
-          PRDT_TYPE_CD: 300
-        })
-      ).result.output
-
-      await postgres.query(
-        `INSERT INTO excludestock VALUES ('${stockInfo.shtn_pdno}', '${stockInfo.prdt_abrv_name}')`
-      )
-
-      await TelegramBotManagement.sendMessage({
-        message: `앞으로 ${stockInfo.prdt_abrv_name}(${stockInfo.shtn_pdno}) 종목을 정리하지 않습니다.`
-      })
-    }
-  )
-
-  TelegramBotManagement.onText(
-    /\/delete_excluded_stock (.+)/,
-    async (_, match) => {
-      const stockInfo = (
-        await DomesticStockManagement.searchStockInfo({
-          PDNO: match[1],
-          PRDT_TYPE_CD: 300
-        })
-      ).result.output
-
-      await postgres.query(
-        `DELETE FROM excludestock WHERE id = '${stockInfo.shtn_pdno}'`
-      )
-
-      await TelegramBotManagement.sendMessage({
-        message: `${stockInfo.prdt_abrv_name}(${stockInfo.shtn_pdno}) 종목을 정리에서 제외하지 않습니다.`
-      })
-    }
-  )
-
-  TelegramBotManagement.onText(/\/create_evening/, async () => {
-    await generateToken()
-    await generateEvening()
-  })
-}
-main()
 
 const generateToken = async () => {
   await revokeToken()
@@ -253,9 +188,7 @@ const generateEvening = async () => {
   await createEvening(indexes.kospi, indexes.kosdaq, 상천주)
   await createNewStockReport(상천주)
 
-  TelegramBotManagement.sendMessage({
-    message: '금일 이브닝을 생성했습니다.'
-  })
+  sendMessage('금일 이브닝을 생성하였습니다.')
 
   console.log('Complete generating evening.')
 }
@@ -383,3 +316,81 @@ const createNewStockReport = async (marketData: StockInfo[]) => {
     }
   }
 }
+
+telegramBot.command('list_excluded_stocks', async (ctx) => {
+  const { rows } = await postgres.query('SELECT * FROM excludestock')
+
+  let excludedStockList = ''
+  for (const [index, row] of rows.entries()) {
+    excludedStockList += `${index + 1}. ${row.name}(${row.id})\n`
+  }
+
+  if (excludedStockList === '') {
+    excludedStockList = '정리하지 않는 종목이 없습니다.'
+  } else {
+    ctx.reply(`정리에서 제외하는 종목 리스트\n\n${excludedStockList}`)
+  }
+})
+
+telegramBot.command('add_excluded_stock', async (ctx) => {
+  if (ctx.message.text.split(' ').length !== 2) {
+    ctx.reply('종목코드를 입력해주세요.')
+    return
+  }
+
+  if (KIS_API.defaults.headers.common['Authorization'] === undefined)
+    await generateToken()
+
+  const stockId = ctx.message.text.split(' ')[1]
+  const { result } = await DomesticStockManagement.searchStockInfo({
+    PDNO: stockId,
+    PRDT_TYPE_CD: 300
+  })
+
+  await postgres.query(
+    `INSERT INTO excludestock (id, name) VALUES ('${stockId}', '${result.output.prdt_abrv_name}')`
+  )
+
+  ctx.reply(
+    `${result.output.prdt_abrv_name}(${stockId})을(를) 정리에서 제외하였습니다.`
+  )
+})
+
+telegramBot.command('remove_excluded_stock', async (ctx) => {
+  if (ctx.message.text.split(' ').length !== 2) {
+    ctx.reply('종목코드를 입력해주세요.')
+    return
+  }
+
+  if (KIS_API.defaults.headers.common['Authorization'] === undefined)
+    await generateToken()
+
+  const stockId = ctx.message.text.split(' ')[1]
+  const { result } = await DomesticStockManagement.searchStockInfo({
+    PDNO: stockId,
+    PRDT_TYPE_CD: 300
+  })
+
+  await postgres.query(`DELETE FROM excludestock WHERE id = '${stockId}'`)
+
+  ctx.reply(`${result.output.prdt_abrv_name}(${stockId})을(를) 정리합니다.`)
+})
+
+// # Sunday-AI is running...
+const main = () => {
+  console.log('Sunday-AI is running...')
+  process.env.NODE_ENV === 'production' &&
+    sendMessage('Sunday-AI is running...')
+}
+main()
+telegramBot.launch()
+
+// Enable graceful stop
+process.once('SIGINT', () => {
+  telegramBot.stop('SIGINT')
+  postgres.end()
+})
+process.once('SIGTERM', () => {
+  telegramBot.stop('SIGTERM')
+  postgres.end()
+})
