@@ -2,8 +2,8 @@
   "compilerOptions": {
     "incremental": true,
     "target": "esnext",
-    "module": "NodeNext",
-    "moduleResolution": "node",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
     "resolveJsonModule": true,
     "preserveValueImports": false,
     "esModuleInterop": true,
