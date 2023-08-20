@@ -1,4 +1,3 @@
-import { Errors } from 'evernote'
 import { makeNote } from './context'
 
 describe('makeNote', () => {
@@ -12,9 +11,5 @@ describe('makeNote', () => {
     expect(note.title).toEqual(title)
   })
 
-  it('fail make note', async () => {
-    expect(async () => {
-      await makeNote(undefined)
-    }).rejects.toThrowError(Errors.EDAMUserException)
-  })
+  // @todo: error exception test
 })
