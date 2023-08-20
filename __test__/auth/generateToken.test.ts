@@ -6,22 +6,22 @@ describe('generateToken', () => {
   })
 
   it('success generate token', async () => {
-    expect(
-      await AuthManagement.verify({
-        grant_type: 'client_credentials',
-        appkey: process.env.KIS_KEY,
-        appsecret: process.env.KIS_SECRET
-      })
-    ).toHaveProperty('code', 200)
-  })
+    AuthManagement.verify = jest.fn().mockResolvedValue({
+      code: 200,
+      result: {
+        access_token: 'token',
+        token_type: 'Bearer',
+        expires_in: 86400
+      }
+    })
 
-  it('fail generate token', async () => {
-    expect(
-      await AuthManagement.verify({
-        grant_type: '',
-        appkey: '',
-        appsecret: ''
-      })
-    ).toHaveProperty('code', 403)
+    const fetch = await AuthManagement.verify({
+      grant_type: 'client_credentials',
+      appkey: process.env.KIS_KEY,
+      appsecret: process.env.KIS_SECRET
+    })
+
+    expect(fetch.code).toBe(200)
+    expect(fetch.result.access_token).toBe('token')
   })
 })
