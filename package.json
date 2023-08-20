@@ -8,7 +8,7 @@
     "start": "NODE_ENV=production ts-node -r dotenv/config src/index.ts",
     "lint:fix": "prettier --write . && eslint --fix",
     "lint": "prettier --check . && eslint",
-    "test": "jest --detectOpenHandles --forceExit"
+    "test": "jest --detectOpenHandles --forceExit --coverage"
   },
   "packageManager": "pnpm@8.6.12",
   "dependencies": {
