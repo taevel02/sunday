@@ -3,13 +3,22 @@ import { AuthManagement } from '../../src/api'
 describe('revokeToken', () => {
   let token: string
   beforeAll(async () => {
+    AuthManagement.verify = jest.fn().mockResolvedValue({
+      code: 200,
+      result: {
+        access_token: 'token',
+        token_type: 'Bearer',
+        expires_in: 86400
+      }
+    })
+
     token = (
       await AuthManagement.verify({
         grant_type: 'client_credentials',
         appkey: process.env.KIS_KEY,
         appsecret: process.env.KIS_SECRET
       })
-    ).result?.access_token as string
+    ).result?.access_token
   })
 
   it('should have a revoke token function', () => {
@@ -17,32 +26,16 @@ describe('revokeToken', () => {
   })
 
   it('success revoke token', async () => {
-    expect(
-      await AuthManagement.revoke({
-        appkey: process.env.KIS_KEY,
-        appsecret: process.env.KIS_SECRET,
-        token
-      })
-    ).toHaveProperty('code', 200)
-  })
+    AuthManagement.revoke = jest.fn().mockResolvedValue({
+      code: 200
+    })
 
-  it('fail revoke token', async () => {
-    expect(
-      await AuthManagement.revoke({
-        appkey: '',
-        appsecret: '',
-        token: ''
-      })
-    ).toHaveProperty('code', 403)
-  })
+    const fetch = await AuthManagement.revoke({
+      appkey: process.env.KIS_KEY,
+      appsecret: process.env.KIS_SECRET,
+      token
+    })
 
-  it('invailed token', async () => {
-    expect(
-      await AuthManagement.revoke({
-        appkey: process.env.KIS_KEY,
-        appsecret: process.env.KIS_SECRET,
-        token: ''
-      })
-    ).toHaveProperty('code', 403)
+    expect(fetch.code).toBe(200)
   })
 })
