@@ -317,6 +317,13 @@ const createNewStockReport = async (marketData: StockInfo[]) => {
   }
 }
 
+telegramBot.command('create_evening', async () => {
+  if (KIS_API.defaults.headers.common['Authorization'] === undefined)
+    await generateToken()
+
+  await generateEvening()
+})
+
 telegramBot.command('list_excluded_stocks', async (ctx) => {
   const { rows } = await postgres.query('SELECT * FROM excludestock')
 
