@@ -21,12 +21,15 @@ jobs:
         uses: pnpm/action-setup@v2
         with:
           version: 8
-      
+
       - name: Install dependencies
         run: pnpm install
 
       - name: Run tests
         run: pnpm test
+        env:
+          EVERNOTE_TOKEN: ${{ secrets.TEST_EVERNOTE_TOKEN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TEST_TELEGRAM_BOT_TOKEN }}
 
       - name: Install Railway
         run: pnpm add -g @railway/cli
