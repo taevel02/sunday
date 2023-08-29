@@ -181,31 +181,16 @@ const get상천주 = async (): Promise<StockInfo[]> => {
 }
 
 const generateEvening = async () => {
-  try {
-    const indexes = await getIndexes()
-    const 상천주 = await get상천주()
+  const indexes = await getIndexes()
+  const 상천주 = await get상천주()
 
-    console.log(indexes.kospi, 상천주.length)
+  // 이브닝 & 신규종목 리포트 생성
+  await createEvening(indexes.kospi, indexes.kosdaq, 상천주)
+  await createNewStockReport(상천주)
 
-    // 이브닝 & 신규종목 리포트 생성
-    await createEvening(indexes.kospi, indexes.kosdaq, 상천주)
-    await createNewStockReport(상천주)
+  sendMessage('금일 이브닝을 생성하였습니다.')
 
-    sendMessage('금일 이브닝을 생성하였습니다.')
-
-    console.log('Complete creating evening & new stock report.')
-  } catch (err) {
-    console.log(err)
-    sendMessage('이브닝 생성 중 오류가 발생하였습니다.')
-
-    // @todo: 이렇게 하지 말고, 제대로 된 에러 핸들링을 해야 함
-    if (KIS_API.defaults.headers.common['Authorization']) {
-      await generateEvening()
-    } else {
-      await generateToken()
-      await generateEvening()
-    }
-  }
+  console.log('Complete creating evening & new stock report.')
 }
 
 const computedSign = (index: MarketIndex): string => {
@@ -220,6 +205,7 @@ const computedTextColor = (rateOfChange: number) => {
   else return undefined
 }
 
+// @todo: try - catch / why econnreset error?
 const createEvening = async (
   kospi: MarketIndex,
   kosdaq: MarketIndex,
@@ -276,11 +262,17 @@ const createEvening = async (
   }
 
   const title = dayjs(new Date()).format('YYYY.MM.DD(ddd)')
-  await EvernoteManagement.makeNote(
-    title,
-    content,
-    PersonalNotebook['01. evening']
-  )
+
+  if (await EvernoteManagement.healthCheck()) {
+    await EvernoteManagement.makeNote(
+      title,
+      content,
+      PersonalNotebook['01. evening']
+    )
+  } else {
+    console.log('에버노트 서버에 연결할 수 없습니다., 재시도 합니다.')
+    // await generateEvening()
+  }
 }
 
 const getExistedNotes = async (parantNotebook: guid) => {

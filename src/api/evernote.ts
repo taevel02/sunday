@@ -10,6 +10,16 @@ export class EvernoteService {
   public noteStore = evernoteClient.getNoteStore()
   public userStore = evernoteClient.getUserStore()
 
+  public async healthCheck(): Promise<Boolean> {
+    try {
+      const user = await this.userStore.getUser()
+      console.log(user.active)
+      return user.active
+    } catch (err) {
+      throw err
+    }
+  }
+
   /**
    *
    * @param parentNotebook
