@@ -263,16 +263,11 @@ const createEvening = async (
 
   const title = dayjs(new Date()).format('YYYY.MM.DD(ddd)')
 
-  if (await EvernoteManagement.healthCheck()) {
-    await EvernoteManagement.makeNote(
-      title,
-      content,
-      PersonalNotebook['01. evening']
-    )
-  } else {
-    console.log('에버노트 서버에 연결할 수 없습니다., 재시도 합니다.')
-    // await generateEvening()
-  }
+  await EvernoteManagement.makeNote(
+    title,
+    content,
+    PersonalNotebook['01. evening']
+  )
 }
 
 const getExistedNotes = async (parantNotebook: guid) => {
