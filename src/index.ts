@@ -180,13 +180,29 @@ const get상천주 = async (): Promise<StockInfo[]> => {
   return filteredMarketData
 }
 
+const get150억봉 = async (): Promise<StockInfo[]> => {
+  const _150억봉 = (
+    await DomesticStockManagement.pSearchResult({
+      user_id: 'taevel02',
+      seq: 0
+    })
+  )?.result?.output2
+
+  return _150억봉 || []
+}
+
 const generateEvening = async () => {
   const indexes = await getIndexes()
   const 상천주 = await get상천주()
+  const 세력봉 = await get150억봉()
+
+  const eveningStocks = 세력봉.concat(
+    상천주.filter((상천) => !세력봉.some((세력) => 세력.code === 상천.code))
+  )
 
   // 이브닝 & 신규종목 리포트 생성
-  await createEvening(indexes.kospi, indexes.kosdaq, 상천주)
-  await createNewStockReport(상천주)
+  await createEvening(indexes.kospi, indexes.kosdaq, eveningStocks)
+  await createNewStockReport(eveningStocks)
 
   sendMessage('금일 이브닝을 생성하였습니다.')
 
@@ -205,7 +221,6 @@ const computedTextColor = (rateOfChange: number) => {
   else return undefined
 }
 
-// @todo: try - catch / why econnreset error?
 const createEvening = async (
   kospi: MarketIndex,
   kosdaq: MarketIndex,
