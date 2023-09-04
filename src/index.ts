@@ -80,13 +80,13 @@ const checkHolidayJob = scheduleJob(15, 35, async () => {
 
 // const stopTradingViewJob = scheduleJob(15, 30, async () => {})
 
-const generateEveningJob = scheduleJob(15, 40, async () => {
-  await generateEvening()
-})
+// const generateEveningJob = scheduleJob(15, 40, async () => {
+//   await generateEvening()
+// })
 
-const revokeTokenJob = scheduleJob(15, 50, async () => {
-  await revokeToken()
-})
+// const revokeTokenJob = scheduleJob(15, 50, async () => {
+//   await revokeToken()
+// })
 
 const generateToken = async () => {
   await revokeToken()
