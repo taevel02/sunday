@@ -69,8 +69,8 @@ const checkHolidayJob = scheduleJob(15, 35, async () => {
     rescheduleJob(generateTokenJob, 15, 30)
     // rescheduleJob(startTradingViewJob, 9, 0)
     // rescheduleJob(stopTradingViewJob, 15, 30)
-    rescheduleJob(generateEveningJob, 15, 40)
-    rescheduleJob(revokeTokenJob, 15, 50)
+    // rescheduleJob(generateEveningJob, 15, 40)
+    // rescheduleJob(revokeTokenJob, 15, 50)
   }
 
   console.log('Complete checking holiday.')
