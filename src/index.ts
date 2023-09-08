@@ -201,7 +201,7 @@ const generateEvening = async () => {
   )
 
   // 이브닝 & 신규종목 리포트 생성
-  await createEvening(indexes.kospi, indexes.kosdaq, eveningStocks)
+  // await createEvening(indexes.kospi, indexes.kosdaq, eveningStocks)
   await createNewStockReport(eveningStocks)
 
   sendMessage(
@@ -283,7 +283,7 @@ const createEvening = async (
   await EvernoteManagement.makeNote(
     title,
     content,
-    PersonalNotebook['01. evening']
+    PersonalNotebook['3. evening']
   )
 }
 
@@ -306,8 +306,17 @@ const getExistedNotes = async (parantNotebook: guid) => {
 }
 
 const createNewStockReport = async (marketData: StockInfo[]) => {
-  const stockReports = await getExistedNotes(PersonalNotebook['03. explore'])
-  const tempStockReports = await getExistedNotes(PersonalNotebook['04. temp'])
+  const notebooks = await EvernoteManagement.findAllNotebooks({
+    stack: '4. stock'
+  })
+
+  const stockReports = []
+  for (const notebook of notebooks) {
+    const notes = await getExistedNotes(notebook.guid)
+    stockReports.push(...notes)
+  }
+
+  const tempStockReports = await getExistedNotes(PersonalNotebook['5. temp'])
 
   const codesInsideNoteTitle = [...tempStockReports, ...stockReports].map(
     (note) => note.title.split(/[()]/g)[1]
@@ -330,7 +339,7 @@ const createNewStockReport = async (marketData: StockInfo[]) => {
           result.output.shtn_pdno
         })`,
         StockReport(parseInt(marketData[index].stotprice)),
-        PersonalNotebook['04. temp']
+        PersonalNotebook['5. temp']
       )
     }
   }

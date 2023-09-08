@@ -10,6 +10,14 @@ export class EvernoteService {
   public noteStore = evernoteClient.getNoteStore()
   public userStore = evernoteClient.getUserStore()
 
+  public async findAllNotebooks(filted?: { stack: string }) {
+    const notebooks = await this.noteStore.listNotebooks()
+
+    if (!filted.stack) return notebooks
+
+    return notebooks.filter((notebook) => notebook.stack === filted.stack)
+  }
+
   /**
    *
    * @param parentNotebook
