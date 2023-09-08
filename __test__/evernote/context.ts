@@ -6,6 +6,12 @@ const evernoteTestClient = new Evernote.Client({
   sandbox: true
 })
 
+export const findAllNotebooks = async () => {
+  const notebooks = await evernoteTestClient.getNoteStore().listNotebooks()
+
+  return notebooks.length
+}
+
 export const findAllNotesByNotebook = async (
   parentNotebook: guid,
   offset: number = 0,
