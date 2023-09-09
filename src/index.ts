@@ -201,12 +201,10 @@ const generateEvening = async () => {
   )
 
   // 이브닝 & 신규종목 리포트 생성
-  // await createEvening(indexes.kospi, indexes.kosdaq, eveningStocks)
+  await createEvening(indexes.kospi, indexes.kosdaq, eveningStocks)
   await createNewStockReport(eveningStocks)
 
-  sendMessage(
-    `금일 이브닝을 생성하였습니다. 금일 종목: ${eveningStocks.length}`
-  )
+  sendMessage(`금일 이브닝을 생성하였습니다. (${eveningStocks.length}개 종목)`)
 
   console.log('Complete creating evening & new stock report.')
 }
@@ -278,7 +276,7 @@ const createEvening = async (
     )
   }
 
-  const title = dayjs(new Date()).format('YYYY.MM.DD(ddd)')
+  const title = `${dayjs(new Date()).format('YYYY.MM.DD(ddd)')} evening`
 
   await EvernoteManagement.makeNote(
     title,
@@ -411,21 +409,20 @@ telegramBot.command('remove_excluded_stock', async (ctx) => {
   ctx.reply(`${result.output.prdt_abrv_name}(${stockId})을(를) 정리합니다.`)
 })
 
-// # Sunday-AI is running...
-// const main = () => {
-//   console.log('Sunday-AI is running...')
-//   process.env.NODE_ENV === 'production' &&
-//     sendMessage('Sunday-AI is running...')
-// }
-// main()
-telegramBot.launch().then(() => sendMessage('Sunday-AI is running...'))
+const main = () => {
+  sendMessage('Sunday-AI is started.')
+}
+main()
+telegramBot.launch()
 
 // Enable graceful stop
 process.once('SIGINT', () => {
+  sendMessage('Sunday-AI is stopped.')
   telegramBot.stop('SIGINT')
   postgres.end()
 })
 process.once('SIGTERM', () => {
+  sendMessage('Sunday-AI is stopped.')
   telegramBot.stop('SIGTERM')
   postgres.end()
 })
