@@ -11,7 +11,7 @@ const StockReport = (stotprice: number) => {
     Number(dayjs(new Date()).format('YYYY')) - 1
   }년 매출액 억. 영업이익 억.</span><br /><span>- ${
     Number(dayjs(new Date()).format('YYYY')) - 2
-  }년 매출액 억. 영업이익 억.</span><br /><span>▶ 부채비율 %, 유보율 % (년 월 기준)</span><br /><span>▶ 전자공시: </span><br /><span>▶ 홈페이지: </span><br /><br /><b><span>◎ 재료</span></b><br /><span>▶ 주요 연혁</span><br /><span>▶ 주요 제품</span><br /><span>▶ 연구개발</span><br /><span>▶ #섹터/테마</span><br /><span>▶ 타법인출자 현황</span><br /><span>[관계기업]</span><br /><span>[기타]</span><br /><br /><hr /><b><span>◎ 관련기사</span></b><br /><span>#섹터/테마</span><br /><span>(날짜)제목</span><br /><span>중요 내용 스크랩</span><br /><br /><b><span>◎기타 참고사항</span></b><br /><span>#섹터/테마</span><br /><span>(날짜)제목</span><br /><span>중요 내용 스크랩</span><br />`
+  }년 매출액 억. 영업이익 억.</span><br /><span>▶ 부채비율 %, 유보율 % (년 월 기준)</span><br /><span>▶ 전자공시: </span><br /><span>▶ 홈페이지: </span><br /><br /><b><span>◎ 재료</span></b><br /><span>▶ 주요 연혁</span><br /><span>▶ 주요 제품</span><br /><span>▶ 연구개발</span><br /><span>▶ #섹터/테마</span><br /><span>▶ 타법인출자 현황</span><br /><span>[관계기업]</span><br /><span>[기타]</span><br /><br /><hr /><b><span>◎ 관련기사</span></b><br /><span>#섹터/테마</span><br /><span>(날짜)제목</span><br /><span>중요 내용 스크랩</span><br /><br /><b><span>◎기타 참고사항</span></b><br />`
 }
 
 export default StockReport
