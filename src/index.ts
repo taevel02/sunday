@@ -204,7 +204,11 @@ const generateEvening = async () => {
   await createEvening(indexes.kospi, indexes.kosdaq, eveningStocks)
   await createNewStockReport(eveningStocks)
 
-  sendMessage(`금일 이브닝을 생성하였습니다. (${eveningStocks.length}개 종목)`)
+  sendMessage(
+    `${await gatchaRandomMessage()}\n\n오늘 공부할 종목은 ${
+      eveningStocks.length
+    }개 입니다!`
+  )
 
   console.log('Complete creating evening & new stock report.')
 }
@@ -341,6 +345,12 @@ const createNewStockReport = async (marketData: StockInfo[]) => {
       )
     }
   }
+}
+
+const gatchaRandomMessage = async () => {
+  const { rows } = await postgres.query('SELECT * FROM messages')
+  const randomIndex = Math.floor(Math.random() * rows.length)
+  return rows[randomIndex].message
 }
 
 telegramBot.command('create_evening', async () => {
