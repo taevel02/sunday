@@ -12,9 +12,8 @@ import {
 } from './api'
 
 import { postgres } from './db.config'
-import { PersonalNotebook } from './evernote.config'
 
-import { NoteMetadata, guid } from './interface/evernote'
+import { NOTEBOOK_GUID, NoteMetadata, guid } from './interface/evernote'
 import { CUSTOMER_TYPE, MarketIndex, StockInfo } from './interface/domestic'
 
 import StockSymbol from './templates/stock-symbol'
@@ -282,11 +281,7 @@ const createEvening = async (
 
   const title = `${dayjs(new Date()).format('YYYY.MM.DD(ddd)')} evening`
 
-  await EvernoteManagement.makeNote(
-    title,
-    content,
-    PersonalNotebook['3. evening']
-  )
+  await EvernoteManagement.makeNote(title, content, NOTEBOOK_GUID.evening)
 }
 
 const getExistedNotes = async (parantNotebook: guid) => {
@@ -312,15 +307,13 @@ const createNewStockReport = async (marketData: StockInfo[]) => {
     stack: '4. stock'
   })
 
-  const stockReports = []
+  const stockReports: NoteMetadata[] = []
   for (const notebook of notebooks) {
     const notes = await getExistedNotes(notebook.guid)
     stockReports.push(...notes)
   }
 
-  const tempStockReports = await getExistedNotes(PersonalNotebook['5. temp'])
-
-  const codesInsideNoteTitle = [...tempStockReports, ...stockReports].map(
+  const codesInsideNoteTitle = stockReports.map(
     (note) => note.title.split(/[()]/g)[1]
   )
   const customExcludedStocks = await checkExcludedStock()
@@ -341,7 +334,7 @@ const createNewStockReport = async (marketData: StockInfo[]) => {
           result.output.shtn_pdno
         })`,
         StockReport(parseInt(marketData[index].stotprice)),
-        PersonalNotebook['5. temp']
+        NOTEBOOK_GUID.temp
       )
     }
   }
