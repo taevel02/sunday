@@ -1,4 +1,3 @@
-import schedule from 'node-schedule'
 import { Telegraf } from 'telegraf'
 
 import dayjs from 'dayjs'
@@ -29,63 +28,6 @@ const telegramBot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN)
 const sendMessage = (message: string) => {
   telegramBot.telegram.sendMessage(process.env.TELEGRAM_CHAT_ID, message)
 }
-
-const scheduleJob = (
-  hour: number,
-  minute: number,
-  callback: schedule.JobCallback
-): schedule.Job =>
-  schedule.scheduleJob(
-    {
-      dayOfWeek: [new schedule.Range(1, 5)],
-      hour,
-      minute,
-      tz: 'Asia/Seoul'
-    },
-    callback
-  )
-
-const rescheduleJob = (job: schedule.Job, hour: number, minute: number) => {
-  job.reschedule({
-    dayOfWeek: [new schedule.Range(1, 5)],
-    hour,
-    minute,
-    tz: 'Asia/Seoul'
-  } as schedule.RecurrenceRule)
-}
-
-// @todo: change to 6:30
-// const generateTokenJob = scheduleJob(15, 30, async () => {
-//   await generateToken()
-// })
-
-// @todo: change to 7:00
-// const checkHolidayJob = scheduleJob(15, 35, async () => {
-//   const isHoliday = await DomesticStockManagement.isHoliday(new Date())
-
-//   if (isHoliday) {
-//     // @todo: change to 6:30
-//     rescheduleJob(generateTokenJob, 15, 30)
-//     // rescheduleJob(startTradingViewJob, 9, 0)
-//     // rescheduleJob(stopTradingViewJob, 15, 30)
-//     // rescheduleJob(generateEveningJob, 15, 40)
-//     // rescheduleJob(revokeTokenJob, 15, 50)
-//   }
-
-//   console.log('Complete checking holiday.')
-// })
-
-// const startTradingViewJob = scheduleJob(9, 0, async () => {})
-
-// const stopTradingViewJob = scheduleJob(15, 30, async () => {})
-
-// const generateEveningJob = scheduleJob(15, 40, async () => {
-//   await generateEvening()
-// })
-
-// const revokeTokenJob = scheduleJob(15, 50, async () => {
-//   await revokeToken()
-// })
 
 const generateToken = async () => {
   await revokeToken()
