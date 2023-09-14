@@ -289,9 +289,7 @@ const gatchaRandomMessage = async () => {
 }
 
 telegramBot.command('create_evening', async () => {
-  if (KIS_API.defaults.headers.common['Authorization'] === undefined)
-    await generateToken()
-
+  await generateToken()
   await generateEvening()
 })
 
@@ -316,8 +314,7 @@ telegramBot.command('add_excluded_stock', async (ctx) => {
     return
   }
 
-  if (KIS_API.defaults.headers.common['Authorization'] === undefined)
-    await generateToken()
+  await generateToken()
 
   const stockId = ctx.message.text.split(' ')[1]
   const { result } = await DomesticStockManagement.searchStockInfo({
@@ -340,8 +337,7 @@ telegramBot.command('remove_excluded_stock', async (ctx) => {
     return
   }
 
-  if (KIS_API.defaults.headers.common['Authorization'] === undefined)
-    await generateToken()
+  await generateToken()
 
   const stockId = ctx.message.text.split(' ')[1]
   const { result } = await DomesticStockManagement.searchStockInfo({
