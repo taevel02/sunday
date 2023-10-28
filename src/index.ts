@@ -143,7 +143,7 @@ const generateEvening = async () => {
 
   // 이브닝 & 신규종목 리포트 생성
   await createEvening(indexes.kospi, indexes.kosdaq, eveningStocks)
-  await createNewStockReport(eveningStocks)
+  // await createNewStockReport(eveningStocks)
 
   sendMessage(
     `${await gatchaRandomMessage()}\n\n오늘 공부할 종목은 ${
