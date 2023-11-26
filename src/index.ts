@@ -145,11 +145,11 @@ const generateEvening = async () => {
   await createEvening(indexes.kospi, indexes.kosdaq, eveningStocks)
   // await createNewStockReport(eveningStocks)
 
-  sendMessage(
-    `${await gatchaRandomMessage()}\n\n오늘 공부할 종목은 ${
-      eveningStocks.length
-    }개 입니다!`
-  )
+  // sendMessage(
+  //   `${await gatchaRandomMessage()}\n\n오늘 공부할 종목은 ${
+  //     eveningStocks.length
+  //   }개 입니다!`
+  // )
 
   console.log('Complete creating evening & new stock report.')
 }
@@ -171,7 +171,7 @@ const createEvening = async (
   kosdaq: MarketIndex,
   marketData: StockInfo[]
 ) => {
-  const customExcludedStocks = await checkExcludedStock()
+  // const customExcludedStocks = await checkExcludedStock()
   let content = '<br />'
 
   const addStockSymbol = (name: string, rateOfChange: number, volume: number) =>
@@ -202,7 +202,7 @@ const createEvening = async (
   }%)</span></div><br /><br /><br /><br />`
 
   for (const stockData of marketData) {
-    if (customExcludedStocks.includes(stockData.code)) continue
+    // if (customExcludedStocks.includes(stockData.code)) continue
 
     const name =
       stockData.name.length >= 10
@@ -282,73 +282,73 @@ const createNewStockReport = async (marketData: StockInfo[]) => {
   }
 }
 
-const gatchaRandomMessage = async () => {
-  const { rows } = await postgres.query('SELECT * FROM messages')
-  const randomIndex = Math.floor(Math.random() * rows.length)
-  return rows[randomIndex].message
-}
+// const gatchaRandomMessage = async () => {
+//   const { rows } = await postgres.query('SELECT * FROM messages')
+//   const randomIndex = Math.floor(Math.random() * rows.length)
+//   return rows[randomIndex].message
+// }
 
 telegramBot.command('create_evening', async () => {
   await generateToken()
   await generateEvening()
 })
 
-telegramBot.command('list_excluded_stocks', async (ctx) => {
-  const { rows } = await postgres.query('SELECT * FROM excludestock')
+// telegramBot.command('list_excluded_stocks', async (ctx) => {
+//   const { rows } = await postgres.query('SELECT * FROM excludestock')
 
-  let excludedStockList = ''
-  for (const [index, row] of rows.entries()) {
-    excludedStockList += `${index + 1}. ${row.name}(${row.id})\n`
-  }
+//   let excludedStockList = ''
+//   for (const [index, row] of rows.entries()) {
+//     excludedStockList += `${index + 1}. ${row.name}(${row.id})\n`
+//   }
 
-  if (excludedStockList === '') {
-    excludedStockList = '정리하지 않는 종목이 없습니다.'
-  } else {
-    ctx.reply(`정리에서 제외하는 종목 리스트\n\n${excludedStockList}`)
-  }
-})
+//   if (excludedStockList === '') {
+//     excludedStockList = '정리하지 않는 종목이 없습니다.'
+//   } else {
+//     ctx.reply(`정리에서 제외하는 종목 리스트\n\n${excludedStockList}`)
+//   }
+// })
 
-telegramBot.command('add_excluded_stock', async (ctx) => {
-  if (ctx.message.text.split(' ').length !== 2) {
-    ctx.reply('종목코드를 입력해주세요.')
-    return
-  }
+// telegramBot.command('add_excluded_stock', async (ctx) => {
+//   if (ctx.message.text.split(' ').length !== 2) {
+//     ctx.reply('종목코드를 입력해주세요.')
+//     return
+//   }
 
-  await generateToken()
+//   await generateToken()
 
-  const stockId = ctx.message.text.split(' ')[1]
-  const { result } = await DomesticStockManagement.searchStockInfo({
-    PDNO: stockId,
-    PRDT_TYPE_CD: 300
-  })
+//   const stockId = ctx.message.text.split(' ')[1]
+//   const { result } = await DomesticStockManagement.searchStockInfo({
+//     PDNO: stockId,
+//     PRDT_TYPE_CD: 300
+//   })
 
-  await postgres.query(
-    `INSERT INTO excludestock (id, name) VALUES ('${stockId}', '${result.output.prdt_abrv_name}')`
-  )
+//   await postgres.query(
+//     `INSERT INTO excludestock (id, name) VALUES ('${stockId}', '${result.output.prdt_abrv_name}')`
+//   )
 
-  ctx.reply(
-    `${result.output.prdt_abrv_name}(${stockId})을(를) 정리에서 제외하였습니다.`
-  )
-})
+//   ctx.reply(
+//     `${result.output.prdt_abrv_name}(${stockId})을(를) 정리에서 제외하였습니다.`
+//   )
+// })
 
-telegramBot.command('remove_excluded_stock', async (ctx) => {
-  if (ctx.message.text.split(' ').length !== 2) {
-    ctx.reply('종목코드를 입력해주세요.')
-    return
-  }
+// telegramBot.command('remove_excluded_stock', async (ctx) => {
+//   if (ctx.message.text.split(' ').length !== 2) {
+//     ctx.reply('종목코드를 입력해주세요.')
+//     return
+//   }
 
-  await generateToken()
+//   await generateToken()
 
-  const stockId = ctx.message.text.split(' ')[1]
-  const { result } = await DomesticStockManagement.searchStockInfo({
-    PDNO: stockId,
-    PRDT_TYPE_CD: 300
-  })
+//   const stockId = ctx.message.text.split(' ')[1]
+//   const { result } = await DomesticStockManagement.searchStockInfo({
+//     PDNO: stockId,
+//     PRDT_TYPE_CD: 300
+//   })
 
-  await postgres.query(`DELETE FROM excludestock WHERE id = '${stockId}'`)
+//   await postgres.query(`DELETE FROM excludestock WHERE id = '${stockId}'`)
 
-  ctx.reply(`${result.output.prdt_abrv_name}(${stockId})을(를) 정리합니다.`)
-})
+//   ctx.reply(`${result.output.prdt_abrv_name}(${stockId})을(를) 정리합니다.`)
+// })
 
 const main = () => {
   sendMessage('Sunday-AI is started.')
