@@ -1,4 +1,4 @@
-name: 'build'
+name: 'test'
 on:
   push:
     branches:
@@ -39,6 +39,3 @@ jobs:
 
       # - name: run tests
       #   run: pnpm test
-
-      - name: build
-        run: pnpm build
