@@ -1,5 +1,5 @@
 #!/bin/bash
 REPOSITORY=/home/ec2-user/sunday
 cd $REPOSITORY
-sudo pnpm install
-sudo pnpm start
+sudo ~/.local/share/pnpm/pnpm install
+sudo ~/.local/share/pnpm/pnpm start
