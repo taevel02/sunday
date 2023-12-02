@@ -2,7 +2,8 @@ import * as Evernote from 'evernote'
 
 const client = new Evernote.Client({
   token: process.env.EVERNOTE_TOKEN,
-  sandbox: false
+  sandbox: false,
+  china: false
 })
 
 export type NoteMetadata = Evernote.NoteStore.NoteMetadata
@@ -11,8 +12,6 @@ export const noteStore = client.getNoteStore()
 export const userStore = client.getUserStore()
 
 export async function readAllNotebooks(filted?: { stack: string }) {
-  console.log('tk1')
-
   const notebooks = await noteStore.listNotebooks()
 
   if (!filted) return notebooks
