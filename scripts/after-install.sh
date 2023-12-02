@@ -2,4 +2,4 @@
 REPOSITORY=/home/ec2-user/sunday
 cd $REPOSITORY
 sudo ~/.local/share/pnpm/pnpm install
-sudo ~/.local/share/pnpm/pnpm start:pm2
+sudo ~/.local/share/pnpm/pm2 start dist/src/index.js --name sunday 
