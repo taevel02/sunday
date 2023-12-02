@@ -92,15 +92,17 @@ export const generateEvening = async () => {
     content += addStockSymbol(stock) + '<br /><br /><br />'
   }
 
+  console.log(terminalStocks.length)
+
   /**
    * TODO:
    * 1. 사용자가 노트북을 선택할 수 있도록?
    * 2. 사용자가 title을 입력할 수 있도록?
    */
   const date = await readMaxWorkDate()
-  await makeNote(
-    `${dayjs(date).format('YYYY.MM.DD(ddd)')} evening`,
-    content,
-    '241a0219-4915-4708-abd4-94109dc4e352'
-  )
+  // await makeNote(
+  //   `${dayjs(date).format('YYYY.MM.DD(ddd)')} evening`,
+  //   content,
+  //   '241a0219-4915-4708-abd4-94109dc4e352'
+  // )
 }

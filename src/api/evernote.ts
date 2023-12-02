@@ -62,22 +62,25 @@ export async function makeNote(
   noteBody?: string,
   parentNotebook?: string
 ) {
-  let nBody = '<?xml version="1.0" encoding="UTF-8"?>'
-  nBody += '<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">'
-  nBody += `<en-note>${noteBody}</en-note>`
+  try {
+    let nBody = '<?xml version="1.0" encoding="UTF-8"?>'
+    nBody += '<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">'
+    nBody += `<en-note>${noteBody}</en-note>`
 
-  // Create note object
-  const ourNote = new Evernote.Types.Note()
-  ourNote.title = noteTitle
-  ourNote.content = nBody
+    // Create note object
+    const ourNote = new Evernote.Types.Note()
+    ourNote.title = noteTitle
+    ourNote.content = nBody
 
-  // parentNotebook is optional; if omitted, default notebook is used
-  if (parentNotebook) {
-    ourNote.notebookGuid = parentNotebook
-  }
+    // parentNotebook is optional; if omitted, default notebook is used
+    if (parentNotebook) {
+      ourNote.notebookGuid = parentNotebook
+    }
 
-  // Attempt to create note in Evernote account (returns a Promise)
-  await noteStore.createNote(ourNote).catch((err) => {
+    // Attempt to create note in Evernote account (returns a Promise)
+    const note = await noteStore.createNote(ourNote)
+    console.log('title:', note.title)
+  } catch (err) {
     throw err
-  })
+  }
 }
