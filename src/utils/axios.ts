@@ -1,21 +1,14 @@
 import axios, { AxiosError, AxiosHeaders } from 'axios'
 import axiosRetry from 'axios-retry'
 
-const instance = axios.create({
-  baseURL: 'https://openapi.koreainvestment.com:9443'
-})
-
-export default instance
-
-export const KIS_API = axios.create({
-  baseURL: 'https://openapi.koreainvestment.com:9443',
-  headers: {
-    'Content-Type': 'application/json; charset=UTF-8'
-  },
+const client = axios.create({
+  baseURL: 'http://data.krx.co.kr/comm/bldAttendant',
   timeout: 3000
 })
 
-axiosRetry(KIS_API, {
+export default client
+
+axiosRetry(client, {
   retries: 3,
   retryCondition: (error) => {
     console.error(
@@ -63,15 +56,13 @@ function responseErrorHandler(err: Error | AxiosError) {
   return Promise.reject(err)
 }
 
-export function updateHeader(
-  key: string | number,
-  value?: string | number | boolean | AxiosHeaders | string[]
-) {
-  if (value) KIS_API.defaults.headers.common[key] = value
-  else delete KIS_API.defaults.headers.common[key]
-}
+client.interceptors.request.use((config) => {
+  const headers = config.headers as AxiosHeaders
+  headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8'
+  return config
+})
 
-KIS_API.interceptors.response.use(
+client.interceptors.response.use(
   (res) => res,
   (err: Error | AxiosError) => responseErrorHandler(err)
 )
