@@ -19,7 +19,7 @@ jobs:
       - name: setup node
         uses: actions/setup-node@v4
         with:
-          node-version: latest
+          node-version: 18
 
       - name: install pnpm
         uses: pnpm/action-setup@v2
@@ -39,3 +39,19 @@ jobs:
 
       # - name: run tests
       #   run: pnpm test
+
+      - name: zip file
+        run: zip -r sunday.zip .
+
+      - name: aws configure credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: upload to s3
+        run: aws s3 cp --region ap-northeast-2 sunday.zip s3://sunday-s3
+
+      - name: deploy with aws code deploy
+        run: aws deploy create-deployment --application-name sunday-codedeploy --deployment-group-name taehoonkwon.com-group --s3-location bucket=sunday-s3,key=sunday.zip,bundleType=zip --region ap-northeast-2
