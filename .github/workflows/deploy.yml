@@ -41,7 +41,7 @@ jobs:
       #   run: pnpm test
 
       - name: zip file
-        run: zip -r sunday.zip .
+        run: zip -r sunday.zip ./src ./scripts ./package.json ./pnpm-lock.yaml ./.env ./appspec.yml tsconfig.json
 
       - name: aws configure credentials
         uses: aws-actions/configure-aws-credentials@v1
