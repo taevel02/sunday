@@ -1,9 +1,12 @@
 import dayjs from 'dayjs'
 import 'dayjs/locale/ko'
 
+import dotenv from 'dotenv'
 import { Telegraf } from 'telegraf'
 
 import { generateEvening } from './services/stocks'
+
+dotenv.config()
 
 dayjs.locale('ko')
 
