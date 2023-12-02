@@ -1,12 +1,12 @@
 import dayjs from 'dayjs'
 import 'dayjs/locale/ko'
 
-import dotenv from 'dotenv'
+import 'dotenv/config'
+
 import { Telegraf } from 'telegraf'
 
 import { generateEvening } from './services/stocks'
-
-dotenv.config()
+import { readAllNotebooks } from './api/evernote'
 
 dayjs.locale('ko')
 
@@ -14,7 +14,9 @@ const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN)
 
 bot.command('generate_evening', async (ctx) => {
   const { message_id } = await ctx.reply('이브닝 생성을 시작합니다..')
+
   await generateEvening()
+
   ctx.deleteMessage(message_id)
   ctx.reply('이브닝 생성이 완료되었습니다.')
 })

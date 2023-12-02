@@ -92,8 +92,6 @@ export const generateEvening = async () => {
     content += addStockSymbol(stock) + '<br /><br /><br />'
   }
 
-  console.log(terminalStocks.length)
-
   /**
    * TODO:
    * 1. 사용자가 노트북을 선택할 수 있도록?
