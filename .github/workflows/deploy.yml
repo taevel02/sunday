@@ -37,11 +37,14 @@ jobs:
       - name: install dependencies
         run: pnpm install
 
+      - name: build server files
+        run: pnpm build
+
       # - name: run tests
       #   run: pnpm test
 
       - name: zip file
-        run: zip -r sunday.zip ./src ./scripts ./package.json ./pnpm-lock.yaml ./.env ./appspec.yml tsconfig.json
+        run: zip -r sunday.zip ./dist ./scripts ./package.json ./pnpm-lock.yaml ./.env ./appspec.yml
 
       - name: aws configure credentials
         uses: aws-actions/configure-aws-credentials@v4
