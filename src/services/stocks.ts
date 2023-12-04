@@ -19,7 +19,6 @@ import {
   상한가테마추적
 } from '../tools/search-condition'
 import { addStockSymbol } from '../tools/templates'
-import { parseNumberWithFloat } from '../tools/formatter'
 
 const computedSign = (index: IndexInfo) => {
   if (index.FLUC_TP_CD === '1') return '▲'
@@ -29,7 +28,7 @@ const computedSign = (index: IndexInfo) => {
 }
 
 const computedTextColor = (index: IndexInfo) => {
-  const rate = parseFloat(index.FLUC_RT)
+  const rate = Number(index.FLUC_RT)
 
   if (rate > 0) return 'color: rgb(252, 18, 51);'
   else if (rate < 0) return 'color: rgb(13, 58, 153);'
@@ -46,8 +45,8 @@ export const generateEvening = async () => {
   const stocks = [
     ...상한가(KRX),
     ...거래량1000만이상(KRX),
-    ...거래대금150억이상(KRX),
-    ...상한가테마추적(KRX)
+    ...거래대금150억이상(KRX)
+    // ...상한가테마추적(KRX)
   ]
 
   const uniqueStocks = [
@@ -82,10 +81,8 @@ export const generateEvening = async () => {
   const addIndexInfo = (index: IndexInfo) =>
     `<span style="${computedTextColor(index)}">${computedSign(
       index
-    )} ${index.IDX_NM.slice(0, 3)} ${parseNumberWithFloat(index.CLSPRC_IDX)} (${
-      parseFloat(index.FLUC_RT) > 0
-        ? `+${parseFloat(index.FLUC_RT).toFixed(2)}`
-        : `-${parseFloat(index.FLUC_RT).toFixed(2)}`
+    )} ${index.IDX_NM.slice(0, 3)} ${index.CLSPRC_IDX} (${
+      parseInt(index.FLUC_RT) > 0 ? '+' + index.FLUC_RT : index.FLUC_RT
     }%)</span>`
 
   content += addIndexInfo(코스피지수) + '<br />'
