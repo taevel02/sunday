@@ -13,11 +13,11 @@ permissions:
     group: ec2-user
 
 hooks:
-  BeforeInstall:
+  ApplicationStop:
     - location: scripts/before-install.sh
       timeout: 300
       runas: ec2-user
-  AfterInstall:
+  AppliiationStart:
     - location: scripts/after-install.sh
       timeout: 300
       runas: ec2-user
