@@ -1,5 +1,6 @@
-version: 0.0
+version: 0.2
 os: linux
+
 files:
   - source: /
     destination: /home/ec2-user/sunday
@@ -12,6 +13,10 @@ permissions:
     group: ec2-user
 
 hooks:
+  BeforeInstall:
+    - location: scripts/before-install.sh
+      timeout: 300
+      runas: ec2-user
   AfterInstall:
     - location: scripts/after-install.sh
       timeout: 300
