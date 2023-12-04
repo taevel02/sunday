@@ -16,14 +16,10 @@ export const formatMarketCap = (MKTCAP: string): string => {
 }
 
 /**
- * 거래량을 천 단위로 변환
+ * 거래량을 K 단위로 변환
  */
-export const formatTradeVolume = (ACC_TRDVOL: string): string => {
-  const volume = parseNumber(ACC_TRDVOL)
-  const thousand = volume % 10000
-
-  return `${thousand}K`
-}
+export const formatTradeVolume = (ACC_TRDVOL: string): string =>
+  `${parseNumber(ACC_TRDVOL).toString().slice(0, -3)}K`
 
 /**
  * 1,000,000,000 형태의 문자열을 숫자로 변환
