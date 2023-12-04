@@ -26,3 +26,9 @@ export const formatTradeVolume = (ACC_TRDVOL: string): string =>
  */
 export const parseNumber = (str: string): number =>
   parseInt(str.replace(/,/g, ''))
+
+/**
+ * 1,000,000.000 형태의 문자열을 소주점 둘째 자리까지 변환
+ */
+export const parseNumberWithFloat = (str: string): number =>
+  Math.round(parseFloat(str.replace(/,/g, '')) * 100) / 100

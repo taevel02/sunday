@@ -7,7 +7,7 @@ import { formatTradeVolume } from '../tools/formatter'
  * @returns ex. ●삼성전자 (+0.02%)(10000K)
  */
 export const addStockSymbol = (stock: StockInfo) => {
-  const rate = Number(stock.FLUC_RT)
+  const rate = parseFloat(stock.FLUC_RT)
 
   if (rate > 0) {
     return `<b><span style="color: rgb(252, 18, 51);">●${stock.ISU_ABBRV} (+${
