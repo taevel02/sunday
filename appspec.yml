@@ -1,6 +1,5 @@
-version: 0.2
+version: 0.0
 os: linux
-
 files:
   - source: /
     destination: /home/ec2-user/sunday
@@ -13,11 +12,7 @@ permissions:
     group: ec2-user
 
 hooks:
-  ApplicationStop:
-    - location: scripts/stop.sh
-      timeout: 300
-      runas: ec2-user
-  ApplicationStart:
-    - location: scripts/start.sh
+  AfterInstall:
+    - location: scripts/after-install.sh
       timeout: 300
       runas: ec2-user
