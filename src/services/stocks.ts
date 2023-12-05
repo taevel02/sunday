@@ -85,7 +85,7 @@ export const generateEvening = async () => {
     )} ${index.IDX_NM.slice(0, 3)} ${parseNumberWithFloat(index.CLSPRC_IDX)} (${
       parseFloat(index.FLUC_RT) > 0
         ? `+${parseFloat(index.FLUC_RT).toFixed(2)}`
-        : `-${parseFloat(index.FLUC_RT).toFixed(2)}`
+        : parseFloat(index.FLUC_RT).toFixed(2)
     }%)</span>`
 
   content += addIndexInfo(코스피지수) + '<br />'
