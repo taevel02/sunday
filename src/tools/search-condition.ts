@@ -5,6 +5,9 @@ export const is스팩주 = (ISU_ABBRV: string): Boolean => {
   return ISU_ABBRV.includes('스팩')
 }
 
+// TODO: 우량주를 체크하는 방법?
+// 종목명에 '우'가 포함되는 식으로 처리하면 이오플로우, 우리로 등의 종목을 검출할 수 없음.
+// 이건 내가 데이터셋을 가지고 있어야겠다. DB에서 우량주 목록 불러와서 처리하는 방식으로.
 export const is우량주 = (ISU_ABBRV: string): Boolean => {
   return ISU_ABBRV.includes('우')
 }

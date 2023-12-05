@@ -50,6 +50,8 @@ export const generateEvening = async () => {
     ...상한가테마추적(KRX)
   ]
 
+  console.log(거래량1000만이상(KRX))
+
   const uniqueStocks = [
     ...new Set(stocks.map((stock) => stock.ISU_SRT_CD))
   ].map((code) => stocks.find((stock) => stock.ISU_SRT_CD === code))
@@ -74,7 +76,7 @@ export const generateEvening = async () => {
           issue.INVSTCAUTN_REMND_ISU_YN === 'O')
     )
 
-    return !hasIssue && !is스팩주(stock.ISU_ABBRV) && !is우량주(stock.ISU_ABBRV)
+    return !hasIssue && !is스팩주(stock.ISU_ABBRV)
   })
 
   let content = ''
