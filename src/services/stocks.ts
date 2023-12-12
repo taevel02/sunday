@@ -19,7 +19,6 @@ import {
   상한가테마추적
 } from '../tools/search-condition'
 import { addStockSymbol } from '../tools/templates'
-import { parseNumberWithFloat } from '../tools/formatter'
 
 const computedSign = (index: IndexInfo) => {
   if (index.FLUC_TP_CD === '1') return '▲'
@@ -50,8 +49,6 @@ export const generateEvening = async () => {
     ...상한가테마추적(KRX)
   ]
 
-  console.log(거래량1000만이상(KRX))
-
   const uniqueStocks = [
     ...new Set(stocks.map((stock) => stock.ISU_SRT_CD))
   ].map((code) => stocks.find((stock) => stock.ISU_SRT_CD === code))
@@ -76,6 +73,7 @@ export const generateEvening = async () => {
           issue.INVSTCAUTN_REMND_ISU_YN === 'O')
     )
 
+    // TODO: 우량주도 제외
     return !hasIssue && !is스팩주(stock.ISU_ABBRV)
   })
 
@@ -84,7 +82,9 @@ export const generateEvening = async () => {
   const addIndexInfo = (index: IndexInfo) =>
     `<span style="${computedTextColor(index)}">${computedSign(
       index
-    )} ${index.IDX_NM.slice(0, 3)} ${parseNumberWithFloat(index.CLSPRC_IDX)} (${
+    )} ${index.IDX_NM.slice(0, 3)} ${parseFloat(
+      index.CLSPRC_IDX.replace(/,/g, '')
+    ).toFixed(2)} (${
       parseFloat(index.FLUC_RT) > 0
         ? `+${parseFloat(index.FLUC_RT).toFixed(2)}`
         : parseFloat(index.FLUC_RT).toFixed(2)

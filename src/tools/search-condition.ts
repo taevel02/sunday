@@ -1,5 +1,5 @@
 import { StockInfo, StockIssueInfo } from '../api/krx'
-import { parseNumber } from './formatter'
+import { parseInteger } from './formatter'
 
 export const is스팩주 = (ISU_ABBRV: string): Boolean => {
   return ISU_ABBRV.includes('스팩')
@@ -34,7 +34,7 @@ export const 상한가 = (arg: StockInfo[]): StockInfo[] => {
  */
 export function 거래량1000만이상(arg: StockInfo[]): StockInfo[] {
   const filteredStocks = arg.filter((stock) => {
-    const 거래량 = parseNumber(stock.ACC_TRDVOL)
+    const 거래량 = parseInteger(stock.ACC_TRDVOL)
     const 등락률 = parseFloat(stock.FLUC_RT)
 
     return 거래량 >= 10000000 && 등락률 >= 0
@@ -51,12 +51,12 @@ export function 거래량1000만이상(arg: StockInfo[]): StockInfo[] {
  */
 export function 거래대금150억이상(arg: StockInfo[]): StockInfo[] {
   const filteredStocks = arg.filter((stock) => {
-    const 거래대금 = parseNumber(stock.ACC_TRDVAL)
-    const 종가 = parseNumber(stock.TDD_CLSPRC)
-    const 시가 = parseNumber(stock.TDD_OPNPRC)
-    const 고가 = parseNumber(stock.TDD_HGPRC)
-    const 저가 = parseNumber(stock.TDD_LWPRC)
-    const 전일종가 = 종가 - parseNumber(stock.CMPPREVDD_PRC)
+    const 거래대금 = parseInteger(stock.ACC_TRDVAL)
+    const 종가 = parseInteger(stock.TDD_CLSPRC)
+    const 시가 = parseInteger(stock.TDD_OPNPRC)
+    const 고가 = parseInteger(stock.TDD_HGPRC)
+    const 저가 = parseInteger(stock.TDD_LWPRC)
+    const 전일종가 = 종가 - parseInteger(stock.CMPPREVDD_PRC)
 
     return (
       거래대금 >= 15000000000 &&
@@ -76,9 +76,9 @@ export function 거래대금150억이상(arg: StockInfo[]): StockInfo[] {
  */
 export function 상한가테마추적(arg: StockInfo[]): StockInfo[] {
   const filteredStocks = arg.filter((stock) => {
-    const 거래량 = parseNumber(stock.ACC_TRDVOL)
-    const 종가 = parseNumber(stock.TDD_CLSPRC)
-    const 전일종가 = 종가 - parseNumber(stock.CMPPREVDD_PRC)
+    const 거래량 = parseInteger(stock.ACC_TRDVOL)
+    const 종가 = parseInteger(stock.TDD_CLSPRC)
+    const 전일종가 = 종가 - parseInteger(stock.CMPPREVDD_PRC)
 
     return 거래량 >= 250000 && 종가 >= 전일종가 * 1.11
   })

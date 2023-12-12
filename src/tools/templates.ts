@@ -1,5 +1,5 @@
 import { StockInfo } from '../api/krx'
-import { formatTradeVolume, parseNumberWithFloat } from '../tools/formatter'
+import { formatTradeVolume } from '../tools/formatter'
 
 /**
  *
@@ -8,13 +8,14 @@ import { formatTradeVolume, parseNumberWithFloat } from '../tools/formatter'
  */
 export const addStockSymbol = (stock: StockInfo) => {
   const name = stock.ISU_ABBRV.replaceAll(/&/g, '&amp;')
-  const rate = parseNumberWithFloat(stock.FLUC_RT)
+  const rate = parseFloat(stock.FLUC_RT).toFixed(2)
+  const _rate = Number(rate)
   const volume = formatTradeVolume(stock.ACC_TRDVOL)
 
-  if (rate > 0) {
+  if (_rate > 0) {
     return `<b><span style="color: rgb(252, 18, 51);">●${name} (+${rate}%)(${volume})</span></b>`
-  } else if (rate < 0) {
-    return `<b><span style="color: rgb(13, 58, 153);">●${name} (${rate}%)($volume})</span></b>`
+  } else if (_rate < 0) {
+    return `<b><span style="color: rgb(13, 58, 153);">●${name} (${rate}%)(${volume})</span></b>`
   } else {
     return `<b><span>●${name} (${volume})</span></b>`
   }
