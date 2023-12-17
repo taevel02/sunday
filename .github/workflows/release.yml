@@ -1,14 +1,11 @@
-name: 'test'
+name: 'release'
 on:
   push:
     branches:
-      - main
-  pull_request:
-    branches:
-      - '**'
+      - release
 
 jobs:
-  build:
+  release:
     strategy:
       fail-fast: false
 
@@ -33,6 +30,7 @@ jobs:
           touch .env
           echo EVERNOTE_TOKEN=${{ secrets.EVERNOTE_TOKEN }} >> .env
           echo TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }} >> .env
+          echo TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }} >> .env
 
       - name: install dependencies
         run: pnpm install
