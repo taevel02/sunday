@@ -1,0 +1,58 @@
+name: 'release'
+on:
+  push:
+    branches:
+      - release
+
+jobs:
+  release:
+    strategy:
+      fail-fast: false
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: create env file
+        working-directory: ./
+        run: |
+          pwd
+          touch .env
+          echo EVERNOTE_TOKEN=${{ secrets.EVERNOTE_TOKEN }} >> .env
+          echo TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }} >> .env
+          echo TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }} >> .env
+
+      - name: install dependencies
+        run: pnpm install
+
+      - name: build server files
+        run: pnpm build
+
+      # - name: run tests
+      #   run: pnpm test
+
+      - name: zip file
+        run: zip -r sunday.zip ./dist ./scripts ./package.json ./pnpm-lock.yaml ./.env ./appspec.yml
+
+      - name: aws configure credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: upload to s3
+        run: aws s3 cp --region ap-northeast-2 sunday.zip s3://sunday-s3
+
+      - name: deploy with aws code deploy
+        run: aws deploy create-deployment --application-name sunday-codedeploy --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name taehoonkwon.com-group --s3-location bucket=sunday-s3,key=sunday.zip,bundleType=zip --region ap-northeast-2
