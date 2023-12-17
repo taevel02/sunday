@@ -6,7 +6,7 @@ import 'dotenv/config'
 import { Telegraf } from 'telegraf'
 
 import { generateEvening } from './services/stocks'
-import { readAllNotebooks } from './api/evernote'
+import { scheduleJob } from 'node-schedule'
 
 dayjs.locale('ko')
 
@@ -37,3 +37,12 @@ bot.launch()
 
 process.once('SIGINT', () => bot.stop('SIGINT'))
 process.once('SIGTERM', () => bot.stop('SIGTERM'))
+
+process.env.NODE_APP_INSTANCE === '0' &&
+  scheduleJob('0 0 16 * * 1-5', async () => {
+    await generateEvening()
+    bot.telegram.sendMessage(
+      process.env.TELEGRAM_CHAT_ID,
+      '이브닝 생성이 완료되었습니다.'
+    )
+  })
