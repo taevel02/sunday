@@ -33,12 +33,16 @@ bot.command('remove_excluded_stock', async (ctx) => {
   ctx.reply('remove_excluded_stock')
 })
 
+bot.command('health_check', async (ctx) => {
+  ctx.reply('health_check')
+})
+
 bot.launch()
 
 process.once('SIGINT', () => bot.stop('SIGINT'))
 process.once('SIGTERM', () => bot.stop('SIGTERM'))
 
-process.env.NODE_APP_INSTANCE === '0' &&
+if (process.env.NODE_APP_INSTANCE === '0') {
   scheduleJob('0 0 16 * * 1-5', async () => {
     await generateEvening()
     bot.telegram.sendMessage(
@@ -46,3 +50,4 @@ process.env.NODE_APP_INSTANCE === '0' &&
       '이브닝 생성이 완료되었습니다.'
     )
   })
+}
