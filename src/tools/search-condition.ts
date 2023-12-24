@@ -1,29 +1,28 @@
-import { PrismaClient } from '@prisma/client'
+import * as prisma from '../utils/prisma'
+
 import { StockInfo } from '../api/krx'
 import { parseInteger } from './formatter'
-
-const prisma = new PrismaClient()
 
 export const is스팩주 = (ISU_ABBRV: string): Boolean => {
   return ISU_ABBRV.includes('스팩')
 }
 
 export const is우선주 = async (ISU_CD: string): Promise<Boolean> => {
-  const count = await prisma.preferredShares.count({
-    where: {
-      ISU_CD
-    }
+  const count = await prisma.countData('PreferredShares', {
+    ISU_CD
   })
 
   return count > 0
 }
 
-export const is사용자제외종목 = (ISU_ABBRV: string): Boolean => {
-  // const 사용자제외종목 = (await api.readAllExcludeStocks()).map(
-  //   (stock) => stock.code
-  // )
-  // if (사용자제외종목.includes(ISU_SRT_CD)) return true
-  return false
+export const is사용자제외종목 = async (ISU_CD: string): Promise<Boolean> => {
+  const stock = await prisma.findOne<prisma.CustomExceptionSharesOutput>(
+    'CustomExceptionShares',
+    { ISU_CD }
+  )
+  if (!stock) return false
+
+  return true
 }
 
 export const 상한가 = (arg: StockInfo[]): StockInfo[] => {

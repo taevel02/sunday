@@ -5,7 +5,12 @@ import 'dotenv/config'
 
 import { Telegraf } from 'telegraf'
 
-import { generateEvening } from './services/stocks'
+import {
+  addExceptionalStock,
+  deleteExceptionalStock,
+  generateEvening,
+  readExceptionalStocks
+} from './services/stocks'
 
 dayjs.locale('ko')
 
@@ -16,20 +21,53 @@ bot.command('generate_evening', async (ctx) => {
 
   await generateEvening()
 
-  ctx.sendMessage('이브닝 생성이 완료되었습니다.')
   ctx.deleteMessage(message_id)
+  ctx.sendMessage('이브닝 생성이 완료되었습니다.')
 })
 
 bot.command('list_excluded_stock', async (ctx) => {
-  ctx.reply('list_excluded_stock')
+  const { message_id } = await ctx.sendMessage(
+    '이브닝에서 제외한 종목을 조회합니다..'
+  )
+
+  const { message } = await readExceptionalStocks()
+
+  ctx.deleteMessage(message_id)
+  ctx.sendMessage(message)
 })
 
 bot.command('add_excluded_stock', async (ctx) => {
-  ctx.reply('add_excluded_stock')
+  const arg = ctx.message.text.split(' ')[1]
+  if (!arg) {
+    ctx.sendMessage('종목 이름을 입력해주세요.')
+    return
+  }
+
+  const { message_id } = await ctx.sendMessage(
+    '이브닝에서 제외할 종목을 추가합니다..'
+  )
+
+  const { message } = await addExceptionalStock(arg)
+
+  ctx.deleteMessage(message_id)
+  ctx.sendMessage(message)
 })
 
 bot.command('remove_excluded_stock', async (ctx) => {
-  ctx.reply('remove_excluded_stock')
+  const arg = ctx.message.text.split(' ')[1]
+  if (!arg) {
+    ctx.sendMessage('종목 이름을 입력해주세요.')
+    return
+  }
+
+  const { message_id } = await ctx.sendMessage(
+    '이브닝에서 제외할 종목을 제거합니다..'
+  )
+
+  const { message } = await deleteExceptionalStock(arg)
+
+  ctx.deleteMessage(message_id)
+  ctx.sendMessage(message)
 })
 
 bot.command('health_check', async (ctx) => {

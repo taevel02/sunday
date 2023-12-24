@@ -10,6 +10,7 @@ import {
 import { makeNote } from '../api/evernote'
 
 import {
+  is사용자제외종목,
   is스팩주,
   is우선주,
   거래대금150억이상,
@@ -19,6 +20,8 @@ import {
 } from '../tools/search-condition'
 import { addStockSymbol } from '../tools/templates'
 import { filterAsync } from '../tools/filter-async'
+
+import * as prisma from '../utils/prisma'
 
 const computedSign = (index: IndexInfo) => {
   if (index.FLUC_TP_CD === '1') return '▲'
@@ -79,13 +82,21 @@ export const generateEvening = async () => {
     is우선주(stock.ISU_SRT_CD)
   )
 
+  const has사용자제외종목 = await filterAsync(uniqueStocks, (stock) =>
+    is사용자제외종목(stock.ISU_SRT_CD)
+  )
+
   const issueSet = new Set(hasIssue)
   const 스팩주Set = new Set(has스팩주)
   const 우선주Set = new Set(has우선주)
+  const 사용자제외종목Set = new Set(has사용자제외종목)
 
   const terminalStocks = uniqueStocks.filter(
     (stock) =>
-      !issueSet.has(stock) && !스팩주Set.has(stock) && !우선주Set.has(stock)
+      !issueSet.has(stock) &&
+      !스팩주Set.has(stock) &&
+      !우선주Set.has(stock) &&
+      !사용자제외종목Set.has(stock)
   )
 
   let content = ''
@@ -115,4 +126,50 @@ export const generateEvening = async () => {
     content,
     '241a0219-4915-4708-abd4-94109dc4e352' // notebook guid
   )
+}
+
+export const readExceptionalStocks = async (): Promise<{ message: string }> => {
+  const stocks = await prisma.readAll<prisma.CustomExceptionSharesOutput[]>(
+    'CustomExceptionShares'
+  )
+
+  if (stocks.length < 1) return { message: '제외한 종목이 없습니다.' }
+
+  const stockList = stocks.map((stock) => stock.ISU_ABBRV).join(',\n')
+  return { message: `제외한 종목은 다음과 같습니다.\n\n${stockList}` }
+}
+
+export const addExceptionalStock = async (
+  ISU_ABBRV: string
+): Promise<{ message: string }> => {
+  const stocks = await readAllStocks('ALL')
+  const stock = stocks.find((stock) => stock.ISU_ABBRV === ISU_ABBRV)
+
+  if (!stock) return { message: '한국 시장에서 존재하지 않는 종목입니다.' }
+
+  const hasStock = await prisma.findOne('CustomExceptionShares', {
+    ISU_ABBRV: stock.ISU_ABBRV
+  })
+  if (hasStock) return { message: '이미 제외한 종목입니다.' }
+
+  await prisma.addData('CustomExceptionShares', {
+    ISU_CD: stock.ISU_SRT_CD,
+    ISU_ABBRV: stock.ISU_ABBRV,
+    MKT_ID: stock.MKT_ID,
+    MKT_NM: stock.MKT_NM
+  })
+  return { message: `앞으로 ${ISU_ABBRV} 종목을 이브닝에서 제외합니다.` }
+}
+
+export const deleteExceptionalStock = async (
+  ISU_ABBRV: string
+): Promise<{ message: string }> => {
+  const stock = await prisma.findOne<prisma.CustomExceptionSharesOutput>(
+    'CustomExceptionShares',
+    { ISU_ABBRV }
+  )
+  if (!stock) return { message: '이 종목은 제외한 적이 없습니다.' }
+
+  await prisma.deleteData('CustomExceptionShares', { ISU_ABBRV })
+  return { message: `앞으로 ${ISU_ABBRV} 종목을 이브닝에서 포함합니다.` }
 }

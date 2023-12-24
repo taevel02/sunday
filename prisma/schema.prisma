@@ -16,3 +16,11 @@ model PreferredShares {
   KIND_STKCERT_TP_NM String
   LIST_DD            String
 }
+
+model CustomExceptionShares {
+  id        Int    @id(map: "CustomExceptionShares_pkey") @default(autoincrement())
+  ISU_CD    String
+  ISU_ABBRV String
+  MKT_ID    String
+  MKT_NM    String
+}
