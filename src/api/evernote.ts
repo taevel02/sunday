@@ -13,7 +13,7 @@ export type NoteMetadata = Evernote.NoteStore.NoteMetadata
 export const noteStore = client.getNoteStore()
 export const userStore = client.getUserStore()
 
-export async function readAllNotebooks(filted?: { stack: string }) {
+export const readAllNotebooks = async (filted?: { stack: string }) => {
   const notebooks = await noteStore.listNotebooks()
 
   if (!filted) return notebooks
@@ -29,11 +29,11 @@ export async function readAllNotebooks(filted?: { stack: string }) {
  * @param limit
  * @returns
  */
-export async function readAllNotesByNotebook(
+export const readAllNotesByNotebook = async (
   parentNotebook: string,
   offset: number = 0,
   limit: number = 250
-) {
+) => {
   const filter = new Evernote.NoteStore.NoteFilter()
   filter.notebookGuid = parentNotebook
 
@@ -59,11 +59,11 @@ export async function readAllNotesByNotebook(
   }
 }
 
-export async function makeNote(
+export const makeNote = async (
   noteTitle: string,
   noteBody?: string,
   parentNotebook?: string
-) {
+) => {
   let nBody = '<?xml version="1.0" encoding="UTF-8"?>'
   nBody += '<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">'
   nBody += `<en-note>${noteBody}</en-note>`

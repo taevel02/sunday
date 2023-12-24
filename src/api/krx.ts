@@ -6,9 +6,9 @@ export interface StockInfo {
   CMPPREVDD_PRC: string // 전일대비가격
   FLUC_RT: string // 등락률
   FLUC_TP_CD: string // 등락구분 (1: 상승, 2: 하락, 3: 보합, 4: 상한가, 5: 하한가)
-  ISU_ABBRV: string // 종목명
+  ISU_ABBRV: string // 종목약명
   ISU_CD: string // 종목코드
-  ISU_SRT_CD: string // 종목코드 (6자리)
+  ISU_SRT_CD: string // 종목단축코드
   LIST_SHRS: string // 상장주식수
   MKTCAP: string // 시가총액
   MKT_ID: string // 시장구분
@@ -57,104 +57,85 @@ export interface StockIssueInfo {
 
 export type Market = 'ALL' | 'STK' | 'KSQ' | 'KNX'
 
-export async function readMaxWorkDate(): Promise<string> {
-  try {
-    const trdDd = (
-      await client.get<{ result: { output: { max_work_dt: string }[] } }>(
-        '/executeForResourceBundle.cmd?baseName=krx.mdc.i18n.component&key=B128.bld'
-      )
-    ).data.result.output[0].max_work_dt
+const fetchFromKRX = async <T>(url: string, params: object): Promise<T> => {
+  const response = await client.post<T>(url, params)
 
-    return trdDd
-  } catch (err) {
-    throw err
-  }
+  if (response.status !== 200)
+    throw new Error(response.statusText || 'KRX API Error')
+
+  return response.data
+}
+
+export const readMaxWorkDate = async (): Promise<string> => {
+  const data = await fetchFromKRX<{
+    result: { output: { max_work_dt: string }[] }
+  }>(
+    '/executeForResourceBundle.cmd?baseName=krx.mdc.i18n.component&key=B128.bld',
+    {}
+  )
+
+  return data.result.output[0].max_work_dt
 }
 
 /**
  *
  * @param mktId ALL: 전체, STX: KOSPI, KSQ: KOSDAQ, KNX: KONEX
  */
-export async function readAllStocks(mktId: Market): Promise<StockInfo[]> {
-  try {
-    const trdDd = await readMaxWorkDate()
+export const readAllStocks = async (mktId: Market): Promise<StockInfo[]> => {
+  const trdDd = await readMaxWorkDate()
+  const data = await fetchFromKRX<{ OutBlock_1: StockInfo[] }>(
+    '/getJsonData.cmd',
+    {
+      bld: 'dbms/MDC/STAT/standard/MDCSTAT01501',
+      locale: 'ko_KR',
+      mktId,
+      trdDd,
+      share: '1',
+      money: '1',
+      csvxls_isNo: 'false'
+    }
+  )
 
-    const response = await client.post<{ OutBlock_1: StockInfo[] }>(
-      '/getJsonData.cmd',
-      {
-        bld: 'dbms/MDC/STAT/standard/MDCSTAT01501',
-        locale: 'ko_KR',
-        mktId,
-        trdDd,
-        share: '1',
-        money: '1',
-        csvxls_isNo: 'false'
-      }
-    )
-
-    if (response.status !== 200)
-      throw new Error(response.statusText ?? 'KRX API Error')
-
-    return response.data.OutBlock_1
-  } catch (err) {
-    throw err
-  }
+  return data.OutBlock_1
 }
 
 /**
  *
  * @param idxIndMidclssCd 01: KRX, 02: KOSPI, 03: KOSDAQ, 04: 테마
  */
-export async function readIndex(
+export const readIndex = async (
   idxIndMidclssCd: '01' | '02' | '03' | '04'
-): Promise<IndexInfo[]> {
-  try {
-    const trdDd = await readMaxWorkDate()
-    const response = await client.post<{ output: IndexInfo[] }>(
-      '/getJsonData.cmd',
-      {
-        bld: 'dbms/MDC/STAT/standard/MDCSTAT00101',
-        locale: 'ko_KR',
-        idxIndMidclssCd,
-        trdDd,
-        share: '2',
-        money: '3',
-        csvxls_isNo: 'false'
-      }
-    )
+): Promise<IndexInfo[]> => {
+  const trdDd = await readMaxWorkDate()
+  const data = await fetchFromKRX<{ output: IndexInfo[] }>('/getJsonData.cmd', {
+    bld: 'dbms/MDC/STAT/standard/MDCSTAT00101',
+    locale: 'ko_KR',
+    idxIndMidclssCd,
+    trdDd,
+    share: '2',
+    money: '3',
+    csvxls_isNo: 'false'
+  })
 
-    if (response.status !== 200)
-      throw new Error(response.statusText ?? 'KRX API Error')
-
-    return response.data.output
-  } catch (err) {
-    throw err
-  }
+  return data.output
 }
 
 /**
  *
  * @param mktId ALL: 전체, STK: KOSPI, KSQ: KOSDAQ, KNX: KONEX
  */
-export async function readStockIssues(
+export const readStockIssues = async (
   mktId: Market
-): Promise<StockIssueInfo[]> {
-  try {
-    const response = await client.post<{ OutBlock_1: StockIssueInfo[] }>(
-      'http://data.krx.co.kr/comm/bldAttendant/getJsonData.cmd',
-      {
-        bld: 'dbms/MDC/STAT/standard/MDCSTAT02001',
-        locale: 'ko_KR',
-        mktId,
-        csvxls_isNo: 'false'
-      }
-    )
+): Promise<StockIssueInfo[]> => {
+  const data = await fetchFromKRX<{ OutBlock_1: StockIssueInfo[] }>(
+    'http://data.krx.co.kr/comm/bldAttendant/getJsonData.cmd',
+    {
+      bld: 'dbms/MDC/STAT/standard/MDCSTAT02001',
+      locale: 'ko_KR',
+      mktId,
+      csvxls_isNo: 'false'
+    }
+  )
 
-    if (response.status !== 200)
-      throw new Error(response.statusText ?? 'KRX API Error')
-
-    return response.data.OutBlock_1
-  } catch (err) {
-    throw err
-  }
+  return data.OutBlock_1
 }

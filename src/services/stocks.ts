@@ -2,7 +2,6 @@ import dayjs from 'dayjs'
 
 import {
   IndexInfo,
-  StockInfo,
   readAllStocks,
   readIndex,
   readMaxWorkDate,
@@ -12,13 +11,14 @@ import { makeNote } from '../api/evernote'
 
 import {
   is스팩주,
-  is우량주,
+  is우선주,
   거래대금150억이상,
   거래량1000만이상,
   상한가,
   상한가테마추적
 } from '../tools/search-condition'
 import { addStockSymbol } from '../tools/templates'
+import { filterAsync } from '../tools/filter-async'
 
 const computedSign = (index: IndexInfo) => {
   if (index.FLUC_TP_CD === '1') return '▲'
@@ -53,29 +53,40 @@ export const generateEvening = async () => {
     ...new Set(stocks.map((stock) => stock.ISU_SRT_CD))
   ].map((code) => stocks.find((stock) => stock.ISU_SRT_CD === code))
 
-  const stockIssues = [
-    ...(await readStockIssues('STK')),
-    ...(await readStockIssues('KSQ'))
-  ].filter((issue) =>
+  const [stkIssues, ksqIssues] = await Promise.all([
+    readStockIssues('STK'),
+    readStockIssues('KSQ')
+  ])
+  const issuedStocks = [...stkIssues, ...ksqIssues].filter((issue) =>
     uniqueStocks.some(
       (uniqueStock) => uniqueStock.ISU_SRT_CD === issue.ISU_SRT_CD
     )
   )
 
-  // TODO: 조건검색 커스텀, 사용자제외종목
-  const terminalStocks: StockInfo[] = uniqueStocks.filter((stock) => {
-    // 관리종목, 환기종목, 거래정지 제외
-    const hasIssue = stockIssues.some(
+  const hasIssue = uniqueStocks.filter((stock) =>
+    issuedStocks.some(
       (issue) =>
         issue.ISU_SRT_CD === stock.ISU_SRT_CD &&
         (issue.ADMISU_YN === 'O' ||
           issue.HALT_YN === 'O' ||
           issue.INVSTCAUTN_REMND_ISU_YN === 'O')
     )
+  )
 
-    // TODO: 우량주도 제외
-    return !hasIssue && !is스팩주(stock.ISU_ABBRV)
-  })
+  const has스팩주 = uniqueStocks.filter((stock) => is스팩주(stock.ISU_ABBRV))
+
+  const has우선주 = await filterAsync(uniqueStocks, (stock) =>
+    is우선주(stock.ISU_SRT_CD)
+  )
+
+  const issueSet = new Set(hasIssue)
+  const 스팩주Set = new Set(has스팩주)
+  const 우선주Set = new Set(has우선주)
+
+  const terminalStocks = uniqueStocks.filter(
+    (stock) =>
+      !issueSet.has(stock) && !스팩주Set.has(stock) && !우선주Set.has(stock)
+  )
 
   let content = ''
 
@@ -97,15 +108,11 @@ export const generateEvening = async () => {
     content += addStockSymbol(stock) + '<br /><br /><br />'
   }
 
-  /**
-   * TODO:
-   * 1. 사용자가 노트북을 선택할 수 있도록?
-   * 2. 사용자가 title을 입력할 수 있도록?
-   */
+  // TODO: 사용자가 노트북을 선택할 수 있도록
   const date = await readMaxWorkDate()
   await makeNote(
     `${dayjs(date).format('YYYY.MM.DD(ddd)')} evening`,
     content,
-    '241a0219-4915-4708-abd4-94109dc4e352'
+    '241a0219-4915-4708-abd4-94109dc4e352' // notebook guid
   )
 }
