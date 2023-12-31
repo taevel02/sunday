@@ -43,7 +43,7 @@ jobs:
       #   run: pnpm test
 
       - name: zip file
-        run: zip -r sunday.zip ./dist ./scripts ./package.json ./pnpm-lock.yaml ./.env ./appspec.yml
+        run: zip -r sunday.zip ./dist ./package.json ./.env ./appspec.yml ./prisma
 
       - name: aws configure credentials
         uses: aws-actions/configure-aws-credentials@v4
