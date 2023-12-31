@@ -13,6 +13,6 @@ permissions:
 
 hooks:
   AfterInstall:
-    - location: /home/ubuntu/scripts/sunday-after-install.sh
+    - location: scripts/sunday-after-install.sh
       timeout: 300
       runas: ubuntu
