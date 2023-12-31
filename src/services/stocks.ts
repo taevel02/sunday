@@ -2,7 +2,6 @@ import dayjs from 'dayjs'
 
 import {
   IndexInfo,
-  StockInfo,
   readAllStocks,
   readIndex,
   readMaxWorkDate,
@@ -11,14 +10,19 @@ import {
 import { makeNote } from '../api/evernote'
 
 import {
+  ConditionName,
+  is사용자제외종목,
   is스팩주,
-  is우량주,
+  is우선주,
   거래대금150억이상,
   거래량1000만이상,
   상한가,
   상한가테마추적
 } from '../tools/search-condition'
 import { addStockSymbol } from '../tools/templates'
+import { filterAsync } from '../tools/filter-async'
+
+import * as prisma from '../utils/prisma'
 
 const computedSign = (index: IndexInfo) => {
   if (index.FLUC_TP_CD === '1') return '▲'
@@ -42,40 +46,65 @@ export const generateEvening = async () => {
   const 코스닥지수 = (await readIndex('03'))[1]
 
   // TODO: 사용자가 원하는 조건검색식을 만들고 적용할 수 있도록
-  const stocks = [
-    ...상한가(KRX),
-    ...거래량1000만이상(KRX),
-    ...거래대금150억이상(KRX),
-    ...상한가테마추적(KRX)
-  ]
+  const conditionFunctions = {
+    상한가: 상한가(KRX),
+    거래량1000만이상: 거래량1000만이상(KRX),
+    거래대금150억이상: 거래대금150억이상(KRX),
+    상한가테마추적: 상한가테마추적(KRX)
+  }
+
+  const enabledConditions = await getEnabledConditions()
+
+  const stocks = enabledConditions.flatMap(
+    (condition) => conditionFunctions[condition] || []
+  )
 
   const uniqueStocks = [
     ...new Set(stocks.map((stock) => stock.ISU_SRT_CD))
   ].map((code) => stocks.find((stock) => stock.ISU_SRT_CD === code))
 
-  const stockIssues = [
-    ...(await readStockIssues('STK')),
-    ...(await readStockIssues('KSQ'))
-  ].filter((issue) =>
+  const [stkIssues, ksqIssues] = await Promise.all([
+    readStockIssues('STK'),
+    readStockIssues('KSQ')
+  ])
+  const issuedStocks = [...stkIssues, ...ksqIssues].filter((issue) =>
     uniqueStocks.some(
       (uniqueStock) => uniqueStock.ISU_SRT_CD === issue.ISU_SRT_CD
     )
   )
 
-  // TODO: 조건검색 커스텀, 사용자제외종목
-  const terminalStocks: StockInfo[] = uniqueStocks.filter((stock) => {
-    // 관리종목, 환기종목, 거래정지 제외
-    const hasIssue = stockIssues.some(
+  const hasIssue = uniqueStocks.filter((stock) =>
+    issuedStocks.some(
       (issue) =>
         issue.ISU_SRT_CD === stock.ISU_SRT_CD &&
         (issue.ADMISU_YN === 'O' ||
           issue.HALT_YN === 'O' ||
           issue.INVSTCAUTN_REMND_ISU_YN === 'O')
     )
+  )
 
-    // TODO: 우량주도 제외
-    return !hasIssue && !is스팩주(stock.ISU_ABBRV)
-  })
+  const has스팩주 = uniqueStocks.filter((stock) => is스팩주(stock.ISU_ABBRV))
+
+  const has우선주 = await filterAsync(uniqueStocks, (stock) =>
+    is우선주(stock.ISU_SRT_CD)
+  )
+
+  const has사용자제외종목 = await filterAsync(uniqueStocks, (stock) =>
+    is사용자제외종목(stock.ISU_SRT_CD)
+  )
+
+  const issueSet = new Set(hasIssue)
+  const 스팩주Set = new Set(has스팩주)
+  const 우선주Set = new Set(has우선주)
+  const 사용자제외종목Set = new Set(has사용자제외종목)
+
+  const terminalStocks = uniqueStocks.filter(
+    (stock) =>
+      !issueSet.has(stock) &&
+      !스팩주Set.has(stock) &&
+      !우선주Set.has(stock) &&
+      !사용자제외종목Set.has(stock)
+  )
 
   let content = ''
 
@@ -97,15 +126,98 @@ export const generateEvening = async () => {
     content += addStockSymbol(stock) + '<br /><br /><br />'
   }
 
-  /**
-   * TODO:
-   * 1. 사용자가 노트북을 선택할 수 있도록?
-   * 2. 사용자가 title을 입력할 수 있도록?
-   */
+  // TODO: 사용자가 노트북을 선택할 수 있도록
   const date = await readMaxWorkDate()
   await makeNote(
     `${dayjs(date).format('YYYY.MM.DD(ddd)')} evening`,
     content,
-    '241a0219-4915-4708-abd4-94109dc4e352'
+    '241a0219-4915-4708-abd4-94109dc4e352' // notebook guid
   )
+}
+
+export const readExceptionalStocks = async (): Promise<{ message: string }> => {
+  const stocks = await prisma.readAll<prisma.CustomExceptionSharesOutput[]>(
+    'CustomExceptionShares'
+  )
+
+  if (stocks.length < 1) return { message: '제외한 종목이 없습니다.' }
+
+  const stockList = stocks.map((stock) => stock.ISU_ABBRV).join(',\n')
+  return { message: `제외한 종목은 다음과 같습니다.\n\n${stockList}` }
+}
+
+export const addExceptionalStock = async (
+  ISU_ABBRV: string
+): Promise<{ message: string }> => {
+  const stocks = await readAllStocks('ALL')
+  const stock = stocks.find((stock) => stock.ISU_ABBRV === ISU_ABBRV)
+
+  if (!stock) return { message: '한국 시장에서 존재하지 않는 종목입니다.' }
+
+  const hasStock = await prisma.findOne('CustomExceptionShares', {
+    ISU_ABBRV: stock.ISU_ABBRV
+  })
+  if (hasStock) return { message: '이미 제외한 종목입니다.' }
+
+  await prisma.addData('CustomExceptionShares', {
+    ISU_CD: stock.ISU_SRT_CD,
+    ISU_ABBRV: stock.ISU_ABBRV,
+    MKT_ID: stock.MKT_ID,
+    MKT_NM: stock.MKT_NM
+  })
+  return { message: `앞으로 ${ISU_ABBRV} 종목을 이브닝에서 제외합니다.` }
+}
+
+export const deleteExceptionalStock = async (
+  ISU_ABBRV: string
+): Promise<{ message: string }> => {
+  const stock = await prisma.findOne<prisma.CustomExceptionSharesOutput>(
+    'CustomExceptionShares',
+    { ISU_ABBRV }
+  )
+  if (!stock) return { message: '이 종목은 제외한 적이 없습니다.' }
+
+  await prisma.deleteData('CustomExceptionShares', { ISU_ABBRV })
+  return { message: `앞으로 ${ISU_ABBRV} 종목을 이브닝에서 포함합니다.` }
+}
+
+export const setCondition = async (
+  conditionName: ConditionName,
+  isEnabled: boolean
+): Promise<{ message: string }> => {
+  const condition = await prisma.findOne<prisma.ConditionOutput>(
+    'SearchCondition',
+    {
+      name: conditionName
+    }
+  )
+  if (!condition) return
+
+  await prisma.updateData(
+    'SearchCondition',
+    { name: conditionName },
+    { isEnabled }
+  )
+
+  return {
+    message: `앞으로 ${conditionName} 조건검색을 ${
+      isEnabled ? '사용합니다.' : '사용하지 않습니다.'
+    }`
+  }
+}
+
+export const getCondition = async (
+  name: ConditionName
+): Promise<prisma.ConditionOutput> => {
+  return await prisma.findOne<prisma.ConditionOutput>('SearchCondition', {
+    name
+  })
+}
+
+export const getEnabledConditions = async (): Promise<string[]> => {
+  const conditions = await prisma.findAll<prisma.ConditionOutput[]>(
+    'SearchCondition',
+    { isEnabled: true }
+  )
+  return conditions.map((condition) => condition.name)
 }

@@ -1,0 +1,31 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model PreferredShares {
+  id                 Int    @id @default(autoincrement())
+  ISU_CD             String
+  ISU_ABBRV          String
+  MKT_ID             String
+  MKT_NM             String
+  KIND_STKCERT_TP_NM String
+  LIST_DD            String
+}
+
+model CustomExceptionShares {
+  id        Int    @id @default(autoincrement())
+  ISU_CD    String
+  ISU_ABBRV String
+  MKT_ID    String
+  MKT_NM    String
+}
+
+model SearchCondition {
+  name      String  @id
+  isEnabled Boolean
+}
