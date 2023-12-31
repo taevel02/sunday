@@ -31,6 +31,7 @@ jobs:
           echo EVERNOTE_TOKEN=${{ secrets.EVERNOTE_TOKEN }} >> .env
           echo TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }} >> .env
           echo TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }} >> .env
+          echo DATABASE_URL=${{ secrets.DATABASE_URL }} >> .env
 
       - name: install dependencies
         run: pnpm install
