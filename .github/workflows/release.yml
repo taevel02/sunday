@@ -39,7 +39,7 @@ jobs:
           pwd
           touch execute-script.sh
           echo "#!/bin/bash" >> execute-script.sh
-          echo "/home/ubuntu/scripts/sunday-after-install.sh" >> execute-script.sh
+          echo "sh /home/ubuntu/scripts/sunday-after-install.sh" >> execute-script.sh
           chmod +x execute-script.sh
 
       - name: install dependencies
