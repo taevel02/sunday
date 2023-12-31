@@ -37,10 +37,10 @@ jobs:
         working-directory: ./
         run: |
           pwd
-          touch excute-script.sh
-          echo "#!/bin/bash" >> excute-script.sh
-          echo "/home/ubuntu/scripts/sunday-after-install.sh" >> excute-script.sh
-          chmod +x excute-script.sh
+          touch execute-script.sh
+          echo "#!/bin/bash" >> execute-script.sh
+          echo "/home/ubuntu/scripts/sunday-after-install.sh" >> execute-script.sh
+          chmod +x execute-script.sh
 
       - name: install dependencies
         run: pnpm install
@@ -52,7 +52,7 @@ jobs:
       #   run: pnpm test
 
       - name: zip file
-        run: zip -r sunday.zip ./dist ./package.json ./.env ./appspec.yml ./prisma ./excute-script.sh
+        run: zip -r sunday.zip ./dist ./package.json ./.env ./appspec.yml ./prisma ./execute-script.sh
 
       - name: aws configure credentials
         uses: aws-actions/configure-aws-credentials@v4
