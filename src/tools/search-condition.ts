@@ -3,6 +3,12 @@ import * as prisma from '../utils/prisma'
 import { StockInfo } from '../api/krx'
 import { parseInteger } from './formatter'
 
+export type ConditionName =
+  | '상한가'
+  | '거래량1000만이상'
+  | '거래대금150억이상'
+  | '상한가테마추적'
+
 export const is스팩주 = (ISU_ABBRV: string): Boolean => {
   return ISU_ABBRV.includes('스팩')
 }

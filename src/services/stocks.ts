@@ -10,6 +10,7 @@ import {
 import { makeNote } from '../api/evernote'
 
 import {
+  ConditionName,
   is사용자제외종목,
   is스팩주,
   is우선주,
@@ -45,12 +46,18 @@ export const generateEvening = async () => {
   const 코스닥지수 = (await readIndex('03'))[1]
 
   // TODO: 사용자가 원하는 조건검색식을 만들고 적용할 수 있도록
-  const stocks = [
-    ...상한가(KRX),
-    ...거래량1000만이상(KRX),
-    ...거래대금150억이상(KRX),
-    ...상한가테마추적(KRX)
-  ]
+  const conditionFunctions = {
+    상한가: 상한가(KRX),
+    거래량1000만이상: 거래량1000만이상(KRX),
+    거래대금150억이상: 거래대금150억이상(KRX),
+    상한가테마추적: 상한가테마추적(KRX)
+  }
+
+  const enabledConditions = await getEnabledConditions()
+
+  const stocks = enabledConditions.flatMap(
+    (condition) => conditionFunctions[condition] || []
+  )
 
   const uniqueStocks = [
     ...new Set(stocks.map((stock) => stock.ISU_SRT_CD))
@@ -172,4 +179,45 @@ export const deleteExceptionalStock = async (
 
   await prisma.deleteData('CustomExceptionShares', { ISU_ABBRV })
   return { message: `앞으로 ${ISU_ABBRV} 종목을 이브닝에서 포함합니다.` }
+}
+
+export const setCondition = async (
+  conditionName: ConditionName,
+  isEnabled: boolean
+): Promise<{ message: string }> => {
+  const condition = await prisma.findOne<prisma.ConditionOutput>(
+    'SearchCondition',
+    {
+      name: conditionName
+    }
+  )
+  if (!condition) return
+
+  await prisma.updateData(
+    'SearchCondition',
+    { name: conditionName },
+    { isEnabled }
+  )
+
+  return {
+    message: `앞으로 ${conditionName} 조건검색을 ${
+      isEnabled ? '사용합니다.' : '사용하지 않습니다.'
+    }`
+  }
+}
+
+export const getCondition = async (
+  name: ConditionName
+): Promise<prisma.ConditionOutput> => {
+  return await prisma.findOne<prisma.ConditionOutput>('SearchCondition', {
+    name
+  })
+}
+
+export const getEnabledConditions = async (): Promise<string[]> => {
+  const conditions = await prisma.findAll<prisma.ConditionOutput[]>(
+    'SearchCondition',
+    { isEnabled: true }
+  )
+  return conditions.map((condition) => condition.name)
 }

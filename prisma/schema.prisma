@@ -8,7 +8,7 @@ datasource db {
 }
 
 model PreferredShares {
-  id                 Int    @id(map: "PreferredShares_pkey") @default(autoincrement())
+  id                 Int    @id @default(autoincrement())
   ISU_CD             String
   ISU_ABBRV          String
   MKT_ID             String
@@ -18,9 +18,14 @@ model PreferredShares {
 }
 
 model CustomExceptionShares {
-  id        Int    @id(map: "CustomExceptionShares_pkey") @default(autoincrement())
+  id        Int    @id @default(autoincrement())
   ISU_CD    String
   ISU_ABBRV String
   MKT_ID    String
   MKT_NM    String
+}
+
+model SearchCondition {
+  name      String  @id
+  isEnabled Boolean
 }

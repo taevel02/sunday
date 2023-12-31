@@ -9,7 +9,9 @@ import {
   addExceptionalStock,
   deleteExceptionalStock,
   generateEvening,
-  readExceptionalStocks
+  getCondition,
+  readExceptionalStocks,
+  setCondition
 } from './services/stocks'
 
 dayjs.locale('ko')
@@ -68,6 +70,13 @@ bot.command('remove_excluded_stock', async (ctx) => {
 
   ctx.deleteMessage(message_id)
   ctx.sendMessage(message)
+})
+
+bot.command('set_upper_condition', async (ctx) => {
+  const status = (await getCondition('상한가테마추적')).isEnabled
+  await setCondition('상한가테마추적', !status)
+
+  ctx.sendMessage(`상한가 테마 추적을 ${!status ? '사용' : '중지'}합니다.`)
 })
 
 bot.command('health_check', async (ctx) => {
