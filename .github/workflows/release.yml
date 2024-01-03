@@ -62,7 +62,7 @@ jobs:
           aws-region: ap-northeast-2
 
       - name: upload to s3
-        run: aws s3 cp --region ap-northeast-2 sunday.zip s3://sunday-s3
+        run: aws s3 cp --region ap-northeast-2 sunday.zip s3://taehoon-2024-s3
 
       - name: deploy with aws code deploy
-        run: aws deploy create-deployment --application-name sunday --deployment-config-name CodeDeployDefault.AllAtOnce --deployment-group-name sunday-group --s3-location bucket=sunday-s3,key=sunday.zip,bundleType=zip --region ap-northeast-2
+        run: aws deploy create-deployment --application-name sunday --deployment-config-name CodeDeployDefault.AllAtOnce --deployment-group-name group-24 --s3-location bucket=taehoon-2024-s3,key=sunday.zip,bundleType=zip --region ap-northeast-2
