@@ -15,7 +15,7 @@
   "dependencies": {
     "@prisma/client": "5.7.0",
     "axios": "^1.6.2",
-    "axios-retry": "^3.9.1",
+    "axios-retry": "^4.0.0",
     "dayjs": "^1.11.10",
     "evernote": "^2.0.5",
     "node-schedule": "^2.1.1",
