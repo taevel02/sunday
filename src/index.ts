@@ -4,6 +4,7 @@ import 'dayjs/locale/ko'
 import 'dotenv/config'
 
 import { Telegraf } from 'telegraf'
+import schedule from 'node-schedule'
 
 import {
   addExceptionalStock,
@@ -13,10 +14,12 @@ import {
   readExceptionalStocks,
   setCondition
 } from './services/stocks'
+import { isHoliday } from './tools/is-holiday'
 
 dayjs.locale('ko')
 
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN)
+const jobs = new Map<number, schedule.Job>()
 
 bot.command('generate_evening', async (ctx) => {
   const { message_id } = await ctx.sendMessage('이브닝 생성을 시작합니다..')
@@ -77,6 +80,29 @@ bot.command('set_upper_condition', async (ctx) => {
   await setCondition('상한가테마추적', !status)
 
   ctx.sendMessage(`상한가 테마 추적을 ${!status ? '사용' : '중지'}합니다.`)
+})
+
+bot.command('auto_generate_evening', async (ctx) => {
+  const userId = ctx.message.from.id
+
+  if (jobs.has(userId)) {
+    const job = jobs.get(userId)
+    job.cancel()
+    jobs.delete(userId)
+    ctx.sendMessage('자동 이브닝 생성을 중지합니다.')
+  } else {
+    const job = schedule.scheduleJob(
+      { hour: 16, minute: 0, dayOfWeek: new schedule.Range(1, 5) },
+      async () => {
+        if (!isHoliday(new Date())) {
+          await generateEvening()
+          ctx.sendMessage('자동으로 이브닝 생성을 완료하였습니다.')
+        }
+      }
+    )
+    jobs.set(userId, job)
+    ctx.sendMessage('자동 이브닝 생성을 시작합니다.')
+  }
 })
 
 bot.command('health_check', async (ctx) => {
