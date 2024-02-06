@@ -92,7 +92,12 @@ bot.command('auto_generate_evening', async (ctx) => {
     ctx.sendMessage('자동 이브닝 생성을 중지합니다.')
   } else {
     const job = schedule.scheduleJob(
-      { hour: 16, minute: 0, dayOfWeek: new schedule.Range(1, 5) },
+      {
+        hour: 16,
+        minute: 0,
+        dayOfWeek: new schedule.Range(1, 5),
+        tz: 'Asia/Seoul'
+      },
       async () => {
         if (!isHoliday(new Date())) {
           await generateEvening()
