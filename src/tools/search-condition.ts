@@ -57,6 +57,7 @@ export const 거래량1000만이상 = (arg: StockInfo[]): StockInfo[] => {
  * 2. 현재가(종가)는 시가보다 최소 9% 이상 = VI 한번은 걸린 걸 찾고자
  * 3. 전일보다 오늘 고가가 최소 15%는 높은 종목
  * 4. 오늘 고가는 저가보다 15%는 높은 종목
+ * 5. 종가가 동전주는 아닌 종목
  */
 export const 거래대금150억이상 = (arg: StockInfo[]): StockInfo[] => {
   const filteredStocks = arg.filter((stock) => {
@@ -71,7 +72,8 @@ export const 거래대금150억이상 = (arg: StockInfo[]): StockInfo[] => {
       거래대금 >= 15000000000 &&
       종가 >= 시가 * 1.09 &&
       고가 >= 전일종가 * 1.15 &&
-      고가 >= 저가 * 1.15
+      고가 >= 저가 * 1.15 &&
+      종가 >= 1000
     )
   })
 
