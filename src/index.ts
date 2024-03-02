@@ -123,17 +123,10 @@ bot.command('auto_youth_housing_opening', async (ctx) => {
     jobs.delete(jobKey)
     ctx.sendMessage('자동 청약공고 조회를 중지합니다.')
   } else {
-    const job = schedule.scheduleJob(
-      {
-        hour: 5,
-        minute: 0,
-        tz: 'Asia/Seoul'
-      },
-      async () => {
-        const { message } = await checkNewYouthHousing()
-        ctx.sendMessage(message)
-      }
-    )
+    const job = schedule.scheduleJob('0 */3 * * *', async () => {
+      const { message } = await checkNewYouthHousing()
+      ctx.sendMessage(message)
+    })
     jobs.set(jobKey, job)
     ctx.sendMessage('자동 청약공고 조회를 시작합니다.')
   }

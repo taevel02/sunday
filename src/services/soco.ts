@@ -34,5 +34,5 @@ export const checkNewYouthHousing = async (): Promise<{ message: string }> => {
     }
   }
 
-  return { message: '오늘은 새로운 청약공고가 없습니다.' }
+  return { message: '새로운 청약공고가 없습니다.' }
 }
