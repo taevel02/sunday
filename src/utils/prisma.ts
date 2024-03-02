@@ -9,6 +9,8 @@ export type CustomExceptionSharesOutput =
 
 export type ConditionOutput = Prisma.SearchConditionGroupByOutputType
 
+export type YouthHousingOutput = Prisma.YouthHousingGroupByOutputType
+
 export const readAll = async <T>(table: Prisma.ModelName): Promise<T> => {
   return await prisma[table].findMany()
 }
@@ -31,7 +33,7 @@ export const findOne = async <T>(
   })
 }
 
-export const addData = async (table: Prisma.ModelName, data: object) => {
+export const addData = async (table: Prisma.ModelName, data: any) => {
   await prisma[table].create({
     data
   })
