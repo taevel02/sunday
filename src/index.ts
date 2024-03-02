@@ -86,7 +86,7 @@ bot.command('set_upper_condition', async (ctx) => {
 
 bot.command('auto_generate_evening', async (ctx) => {
   const userId = ctx.message.from.id
-  const jobKey = parseInt(`${userId}:evening`)
+  const jobKey = userId * 2
 
   if (jobs.has(jobKey)) {
     const job = jobs.get(jobKey)
@@ -115,7 +115,7 @@ bot.command('auto_generate_evening', async (ctx) => {
 
 bot.command('auto_youth_housing_opening', async (ctx) => {
   const userId = ctx.message.from.id
-  const jobKey = parseInt(`${userId}:youth_housing`)
+  const jobKey = userId * 3
 
   if (jobs.has(jobKey)) {
     const job = jobs.get(jobKey)
