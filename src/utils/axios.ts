@@ -1,24 +1,37 @@
-import axios, { AxiosError, AxiosHeaders } from 'axios'
+import axios, { AxiosError, AxiosHeaders, AxiosInstance } from 'axios'
 import axiosRetry from 'axios-retry'
 
-const client = axios.create({
-  baseURL: 'http://data.krx.co.kr/comm/bldAttendant',
-  timeout: 3000
-})
+const createApiClient = (baseURL: string): AxiosInstance => {
+  const appClient: AxiosInstance = axios.create({
+    baseURL,
+    timeout: 3000
+  })
 
-export default client
+  appClient.interceptors.request.use((config) => {
+    const headers = config.headers as AxiosHeaders
+    headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8'
+    return config
+  })
 
-axiosRetry(client, {
-  retries: 3,
-  retryCondition: (error) => {
-    console.error(
-      `네트워크 요청 불량으로 재시도 중입니다. (에러코드 ${error.code}}`
-    )
-    return true
-  }
-})
+  appClient.interceptors.response.use(
+    (res) => res,
+    (err: Error | AxiosError) => responseErrorHandler(err)
+  )
 
-function responseErrorHandler(err: Error | AxiosError) {
+  axiosRetry(appClient, {
+    retries: 3,
+    retryCondition: (error) => {
+      console.error(
+        `네트워크 요청 불량으로 재시도 중입니다. (에러코드 ${error.code}}`
+      )
+      return true
+    }
+  })
+
+  return appClient
+}
+
+const responseErrorHandler = (err: Error | AxiosError) => {
   let reportMessage = ''
   const axiosError = err as AxiosError
 
@@ -56,13 +69,13 @@ function responseErrorHandler(err: Error | AxiosError) {
   return Promise.reject(err)
 }
 
-client.interceptors.request.use((config) => {
-  const headers = config.headers as AxiosHeaders
-  headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8'
-  return config
-})
+const client = createApiClient('http://data.krx.co.kr/comm/bldAttendant')
 
-client.interceptors.response.use(
-  (res) => res,
-  (err: Error | AxiosError) => responseErrorHandler(err)
+export default client
+
+export const clientKRX = createApiClient(
+  'http://data.krx.co.kr/comm/bldAttendant'
+)
+export const clientSoco = createApiClient(
+  'https://soco.seoul.go.kr/youth/pgm/home/yohome'
 )

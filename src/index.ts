@@ -14,6 +14,8 @@ import {
   readExceptionalStocks,
   setCondition
 } from './services/stocks'
+import { checkNewYouthHousing } from './services/soco'
+
 import { isHoliday } from './tools/is-holiday'
 
 dayjs.locale('ko')
@@ -84,11 +86,12 @@ bot.command('set_upper_condition', async (ctx) => {
 
 bot.command('auto_generate_evening', async (ctx) => {
   const userId = ctx.message.from.id
+  const jobKey = parseInt(`${userId}:evening`)
 
-  if (jobs.has(userId)) {
-    const job = jobs.get(userId)
+  if (jobs.has(jobKey)) {
+    const job = jobs.get(jobKey)
     job.cancel()
-    jobs.delete(userId)
+    jobs.delete(jobKey)
     ctx.sendMessage('자동 이브닝 생성을 중지합니다.')
   } else {
     const job = schedule.scheduleJob(
@@ -105,8 +108,34 @@ bot.command('auto_generate_evening', async (ctx) => {
         }
       }
     )
-    jobs.set(userId, job)
+    jobs.set(jobKey, job)
     ctx.sendMessage('자동 이브닝 생성을 시작합니다.')
+  }
+})
+
+bot.command('auto_youth_housing_opening', async (ctx) => {
+  const userId = ctx.message.from.id
+  const jobKey = parseInt(`${userId}:youth_housing`)
+
+  if (jobs.has(jobKey)) {
+    const job = jobs.get(jobKey)
+    job.cancel()
+    jobs.delete(jobKey)
+    ctx.sendMessage('자동 청약공고 조회를 중지합니다.')
+  } else {
+    const job = schedule.scheduleJob(
+      {
+        hour: 5,
+        minute: 0,
+        tz: 'Asia/Seoul'
+      },
+      async () => {
+        const { message } = await checkNewYouthHousing()
+        ctx.sendMessage(message)
+      }
+    )
+    jobs.set(jobKey, job)
+    ctx.sendMessage('자동 청약공고 조회를 시작합니다.')
   }
 })
 

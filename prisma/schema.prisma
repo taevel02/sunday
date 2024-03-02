@@ -29,3 +29,13 @@ model SearchCondition {
   name      String  @id
   isEnabled Boolean
 }
+
+model YouthHousing {
+  boardId Int    @id
+  nttSj   String
+  optn1   String
+  optn2   String
+  optn3   String
+  optn4   String
+  url     String
+}
