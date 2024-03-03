@@ -97,6 +97,7 @@ bot.command('auto_generate_evening', async (ctx) => {
     const job = schedule.scheduleJob(
       {
         hour: 16,
+        minute: 0,
         dayOfWeek: new schedule.Range(1, 5),
         tz: 'Asia/Seoul'
       },
@@ -125,6 +126,7 @@ bot.command('auto_youth_housing_opening', async (ctx) => {
     const job = schedule.scheduleJob(
       {
         hour: 5,
+        minute: 0,
         tz: 'Asia/Seoul'
       },
       async () => {
