@@ -96,17 +96,15 @@ bot.command('auto_generate_evening', async (ctx) => {
   } else {
     const job = schedule.scheduleJob(
       {
-        // hour: 16,
-        second: 20,
-        // dayOfWeek: new schedule.Range(1, 5),
+        hour: 16,
+        dayOfWeek: new schedule.Range(1, 5),
         tz: 'Asia/Seoul'
       },
       async () => {
-        // if (!isHoliday(new Date())) {
-        //   await generateEvening()
-        //   ctx.sendMessage('자동으로 이브닝 생성을 완료하였습니다.')
-        // }
-        ctx.sendMessage('check')
+        if (!isHoliday(new Date())) {
+          await generateEvening()
+          ctx.sendMessage('자동으로 이브닝 생성을 완료하였습니다.')
+        }
       }
     )
     jobs.set(jobKey, job)
@@ -126,14 +124,12 @@ bot.command('auto_youth_housing_opening', async (ctx) => {
   } else {
     const job = schedule.scheduleJob(
       {
-        // hour: 5,
-        second: 20,
+        hour: 5,
         tz: 'Asia/Seoul'
       },
       async () => {
-        // const { message } = await checkNewYouthHousing()
-        // ctx.sendMessage(message)
-        ctx.sendMessage('check')
+        const { message } = await checkNewYouthHousing()
+        ctx.sendMessage(message)
       }
     )
     jobs.set(jobKey, job)
