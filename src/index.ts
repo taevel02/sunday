@@ -96,16 +96,17 @@ bot.command('auto_generate_evening', async (ctx) => {
   } else {
     const job = schedule.scheduleJob(
       {
-        hour: 16,
-        minute: 0,
-        dayOfWeek: new schedule.Range(1, 5),
+        // hour: 16,
+        second: 20,
+        // dayOfWeek: new schedule.Range(1, 5),
         tz: 'Asia/Seoul'
       },
       async () => {
-        if (!isHoliday(new Date())) {
-          await generateEvening()
-          ctx.sendMessage('자동으로 이브닝 생성을 완료하였습니다.')
-        }
+        // if (!isHoliday(new Date())) {
+        //   await generateEvening()
+        //   ctx.sendMessage('자동으로 이브닝 생성을 완료하였습니다.')
+        // }
+        ctx.sendMessage('check')
       }
     )
     jobs.set(jobKey, job)
@@ -123,10 +124,18 @@ bot.command('auto_youth_housing_opening', async (ctx) => {
     jobs.delete(jobKey)
     ctx.sendMessage('자동 청약공고 조회를 중지합니다.')
   } else {
-    const job = schedule.scheduleJob('0 */3 * * *', async () => {
-      const { message } = await checkNewYouthHousing()
-      ctx.sendMessage(message)
-    })
+    const job = schedule.scheduleJob(
+      {
+        // hour: 5,
+        second: 20,
+        tz: 'Asia/Seoul'
+      },
+      async () => {
+        // const { message } = await checkNewYouthHousing()
+        // ctx.sendMessage(message)
+        ctx.sendMessage('check')
+      }
+    )
     jobs.set(jobKey, job)
     ctx.sendMessage('자동 청약공고 조회를 시작합니다.')
   }
@@ -136,7 +145,17 @@ bot.command('health_check', async (ctx) => {
   ctx.reply('health_check')
 })
 
-bot.launch()
+bot.launch(() => {
+  console.log('Bot has started')
+})
 
-process.once('SIGINT', () => bot.stop('SIGINT'))
-process.once('SIGTERM', () => bot.stop('SIGTERM'))
+process.once('SIGINT', () => {
+  bot.stop('SIGINT')
+  jobs.forEach((job) => job.cancel())
+  console.log('Bot has stopped')
+})
+process.once('SIGTERM', () => {
+  bot.stop('SIGTERM')
+  jobs.forEach((job) => job.cancel())
+  console.log('Bot has stopped')
+})
