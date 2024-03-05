@@ -15,9 +15,9 @@ export const checkNewYouthHousing = async (): Promise<{ message: string }> => {
     }
   }
 
-  const newPosts = data.filter((post) =>
-    oldPosts.at(-1).optn1 < post.optn1
-  )
+  const newPosts = data
+    .filter((post) => oldPosts.at(-1).regDate < post.regDate)
+    .sort((a, b) => a.regDate - b.regDate)
 
   if (newPosts.length > 0) {
     for (const post of newPosts) {
@@ -34,5 +34,6 @@ export const checkNewYouthHousing = async (): Promise<{ message: string }> => {
     }
   }
 
-  return { message: '새로운 청약공고가 없습니다.' }
+  console.log(`[${new Date()}] 새로운 청약공고가 없습니다.`)
+  return { message: '' }
 }

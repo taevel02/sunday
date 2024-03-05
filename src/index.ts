@@ -125,13 +125,13 @@ bot.command('auto_youth_housing_opening', async (ctx) => {
   } else {
     const job = schedule.scheduleJob(
       {
-        hour: 11,
+        hour: new schedule.Range(9, 17),
         minute: 0,
         tz: 'Asia/Seoul'
       },
       async () => {
         const { message } = await checkNewYouthHousing()
-        ctx.sendMessage(message)
+        message && ctx.sendMessage(message)
       }
     )
     jobs.set(jobKey, job)
