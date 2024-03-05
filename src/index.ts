@@ -125,7 +125,7 @@ bot.command('auto_youth_housing_opening', async (ctx) => {
   } else {
     const job = schedule.scheduleJob(
       {
-        hour: 5,
+        hour: 11,
         minute: 0,
         tz: 'Asia/Seoul'
       },

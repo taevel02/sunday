@@ -31,7 +31,8 @@ model SearchCondition {
 }
 
 model YouthHousing {
-  boardId Int    @id
+  id      Int    @id @default(autoincrement())
+  boardId Int
   nttSj   String
   optn1   String
   optn2   String

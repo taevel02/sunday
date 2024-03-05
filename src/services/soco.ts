@@ -16,7 +16,7 @@ export const checkNewYouthHousing = async (): Promise<{ message: string }> => {
   }
 
   const newPosts = data.filter((post) =>
-    oldPosts.some((oldPost) => oldPost.optn1 < post.optn1)
+    oldPosts.at(-1).optn1 < post.optn1
   )
 
   if (newPosts.length > 0) {
