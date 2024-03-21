@@ -7,7 +7,6 @@ export interface YouthHousingPost {
   optn2: string // 1: 공공 / 2: 민간
   optn3: string // 담담부서/사업자
   optn4: string // 청약신청일
-  regDate: number // 등록일
 }
 
 export interface YouthHousingPostDetail extends YouthHousingPost {
@@ -52,7 +51,6 @@ export const readAllYouthHousingOpening = async (
         optn2: post.optn2,
         optn3: post.optn3,
         optn4: post.optn4,
-        regDate: post.regDate,
         url: `https://soco.seoul.go.kr/youth/bbs/BMSR00015/view.do?boardId=${post.boardId}&menuNo=400008`
       }
     })

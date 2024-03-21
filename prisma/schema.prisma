@@ -38,6 +38,5 @@ model YouthHousing {
   optn2   String
   optn3   String
   optn4   String
-  regDate BigInt
   url     String
 }

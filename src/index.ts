@@ -141,7 +141,9 @@ bot.command('auto_youth_housing_opening', async (ctx) => {
 
 bot.command('search_youth_housing_opening', async (ctx) => {
   const { message } = await checkNewYouthHousing()
-  message && ctx.sendMessage(message)
+  message
+    ? ctx.sendMessage(message)
+    : ctx.sendMessage('새로운 청약공고가 없습니다.')
 })
 
 bot.command('health_check', async (ctx) => {
