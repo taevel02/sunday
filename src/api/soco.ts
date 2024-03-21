@@ -57,8 +57,6 @@ export const readAllYouthHousingOpening = async (
       }
     })
 
-    console.log(posts)
-
     return posts
   } catch (error) {
     console.error(`[${new Date()}] ${error}`)

@@ -16,7 +16,9 @@ export const checkNewYouthHousing = async (): Promise<{ message: string }> => {
   }
 
   const newPosts = data
-    .filter((post) => oldPosts.at(-1).regDate < post.regDate)
+    .filter((post) =>
+      oldPosts.some((oldPost) => oldPost.regDate < post.regDate)
+    )
     .sort((a, b) => a.regDate - b.regDate)
 
   if (newPosts.length > 0) {
