@@ -139,12 +139,20 @@ bot.command('auto_youth_housing_opening', async (ctx) => {
   }
 })
 
+bot.command('search_youth_housing_opening', async (ctx) => {
+  const { message } = await checkNewYouthHousing()
+  message && ctx.sendMessage(message)
+})
+
 bot.command('health_check', async (ctx) => {
   ctx.reply('health_check')
 })
 
 bot.launch(() => {
   console.log('Bot has started')
+
+  // check search condition db
+  // check preferredshares db
 })
 
 process.once('SIGINT', () => {

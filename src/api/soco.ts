@@ -35,23 +35,31 @@ const fetchFromSoco = async <T>(url: string, params: object): Promise<T> => {
 export const readAllYouthHousingOpening = async (
   pageIndex: number = 1
 ): Promise<YouthHousingPostDetail[]> => {
-  const data = await fetchFromSoco<YouthHousingResponse>('/bbsListJson.json', {
-    bbsId: 'BMSR00015',
-    pageIndex
-  })
+  try {
+    const data = await fetchFromSoco<YouthHousingResponse>(
+      '/bbsListJson.json',
+      {
+        bbsId: 'BMSR00015',
+        pageIndex
+      }
+    )
 
-  const posts = data.resultList.map((post) => {
-    return {
-      boardId: post.boardId,
-      nttSj: post.nttSj,
-      optn1: post.optn1,
-      optn2: post.optn2,
-      optn3: post.optn3,
-      optn4: post.optn4,
-      regDate: post.regDate,
-      url: `https://soco.seoul.go.kr/youth/bbs/BMSR00015/view.do?boardId=${post.boardId}&menuNo=400008`
-    }
-  })
+    const posts = data.resultList.map((post) => {
+      return {
+        boardId: post.boardId,
+        nttSj: post.nttSj,
+        optn1: post.optn1,
+        optn2: post.optn2,
+        optn3: post.optn3,
+        optn4: post.optn4,
+        regDate: post.regDate,
+        url: `https://soco.seoul.go.kr/youth/bbs/BMSR00015/view.do?boardId=${post.boardId}&menuNo=400008`
+      }
+    })
 
-  return posts
+    return posts
+  } catch (error) {
+    console.error(`[${new Date()}] ${error}`)
+    return []
+  }
 }

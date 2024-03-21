@@ -24,6 +24,15 @@ export const findAll = async <T>(
   })
 }
 
+export const findFirst = async <T>(
+  table: Prisma.ModelName,
+  where: object
+): Promise<T> => {
+  return await prisma[table].findFirst({
+    where
+  })
+}
+
 export const findOne = async <T>(
   table: Prisma.ModelName,
   where: object
